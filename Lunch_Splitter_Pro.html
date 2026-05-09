@@ -103,15 +103,22 @@
                         <div class="text-gray-400 text-sm italic w-full text-center py-2">กรุณาเพิ่มชื่อเพื่อนในข้อ 1 ก่อน</div>
                     </div>
                 </div>
-                <div class="mt-3 p-3 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-between">
-                    <div class="text-sm text-blue-800">
-                        <span class="font-semibold">ขี้เกียจพิมพ์?</span> สแกนใบเสร็จเลย
+                <div class="mt-3 p-3 bg-blue-50 border border-blue-100 rounded-xl flex flex-col gap-2">
+                    <div class="text-sm text-blue-800 mb-1">
+                        <span class="font-semibold">ขี้เกียจพิมพ์?</span> ให้ AI สแกนใบเสร็จเลย
                     </div>
-                    <input type="file" accept="image/*" capture="environment" id="receiptImage" class="hidden" onchange="processReceipt(event)" />
-                    <button onclick="document.getElementById('receiptImage').click()"
-                        class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg font-medium transition shadow-sm flex items-center gap-2">
-                        📸 ถ่ายรูปใบเสร็จ
-                    </button>
+                    <div class="flex gap-2">
+                        <input type="file" accept="image/*" capture="environment" id="cameraInput" class="hidden" onchange="processReceipt(event)" />
+                        <input type="file" accept="image/*" id="galleryInput" class="hidden" onchange="processReceipt(event)" />
+                        <button onclick="document.getElementById('cameraInput').click()" 
+                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm py-2 rounded-lg font-medium transition shadow-sm flex items-center justify-center gap-2 active:scale-95">
+                            📸 ถ่ายรูป
+                        </button>
+                        <button onclick="document.getElementById('galleryInput').click()" 
+                            class="flex-1 bg-white border border-blue-300 text-blue-600 hover:bg-blue-50 text-sm py-2 rounded-lg font-medium transition shadow-sm flex items-center justify-center gap-2 active:scale-95">
+                            🖼️ เลือกรูป
+                        </button>
+                    </div>
                 </div>
                 <button onclick="addItem()"
                     class="w-full mt-4 bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-medium transition shadow-sm active:scale-95">
