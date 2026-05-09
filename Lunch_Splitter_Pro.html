@@ -109,8 +109,7 @@
                     <div class="text-sm text-blue-800">
                         <span class="font-semibold">ขี้เกียจพิมพ์?</span> สแกนใบเสร็จเลย
                     </div>
-                    <input type="file" accept="image/*" capture="environment" id="receiptImage" class="hidden"
-                        onchange="processReceipt(event)" />
+                    <input type="file" accept="image/*" capture="environment" id="receiptImage" class="hidden" onchange="processReceipt(event)" />
                     <button onclick="document.getElementById('receiptImage').click()"
                         class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg font-medium transition shadow-sm flex items-center gap-2">
                         📸 ถ่ายรูปใบเสร็จ
@@ -479,6 +478,88 @@
                 showToast("✨ เริ่มบิลใหม่แล้ว");
             }
         }
+
+
+        // ====== ฟังก์ชันสำหรับสแกนใบเสร็จผ่าน Vercel ======
+        async function processReceipt(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            showToast('⏳ กำลังให้ AI วิเคราะห์ใบเสร็จ กรุณารอสักครู่...');
+
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = async () => {
+                const base64Image = reader.result.split(',')[1];
+                const mimeType = file.type;
+
+                try {
+                    // ⚠️ อย่าลืมเปลี่ยน URL ตรงนี้เป็นโดเมน Vercel ของคุณเอง ⚠️
+                    const response = await fetch('https://receipt-api-psi.vercel.app', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            base64Image: base64Image,
+                            mimeType: mimeType
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.candidates && data.candidates.length > 0) {
+                        let aiText = data.candidates[0].content.parts[0].text;
+                        aiText = aiText.replace(/```json/g, '').replace(/```/g, '').trim();
+                        try {
+                            const parsedData = JSON.parse(aiText);
+                            applyReceiptData(parsedData);
+                        } catch (e) {
+                            console.error("JSON Parse Error:", aiText);
+                            showToast('❌ ข้อมูลจากเซิร์ฟเวอร์ไม่ถูกต้อง ลองถ่ายใหม่อีกครั้ง');
+                        }
+                    } else {
+                        showToast('❌ ไม่สามารถอ่านข้อมูลจากรูปนี้ได้');
+                    }
+                } catch (error) {
+                    console.error(error);
+                    showToast('❌ เกิดข้อผิดพลาดในการเชื่อมต่อกับ Vercel API');
+                } finally {
+                    event.target.value = ''; // รีเซ็ต input
+                }
+            };
+        }
+
+        function applyReceiptData(data) {
+            let foundItems = 0;
+
+            if (data.sc_percent !== undefined) {
+                document.getElementById('serviceCharge').value = data.sc_percent;
+            }
+            if (data.vat_percent !== undefined) {
+                document.getElementById('vat').value = data.vat_percent;
+            }
+
+            if (data.items && Array.isArray(data.items)) {
+                data.items.forEach(item => {
+                    if (item.name && item.price && item.price > 0 && !item.name.toLowerCase().includes('total')) {
+                        items.push({
+                            name: item.name,
+                            price: parseFloat(item.price),
+                            eaters: [...people] 
+                        });
+                        foundItems++;
+                    }
+                });
+            }
+
+            if (foundItems > 0) {
+                renderItems();
+                document.getElementById('resultArea').style.display = 'none';
+                showToast(`✅ สแกนสำเร็จ ได้มา ${foundItems} รายการ (อย่าลืมเช็คความถูกต้องอีกรอบนะ)`);
+            } else {
+                showToast('⚠️ AI อ่านใบเสร็จได้ แต่ไม่เจอรายการอาหารเลย');
+            }
+        }
+        // ==================================================
 
 
         // Initial Render
