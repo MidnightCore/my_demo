@@ -272,6 +272,8 @@
             }
             // ให้คำนวณยอดใหม่ทันทีที่สลับสวิตช์ (ถ้ามีรายการอาหารแล้ว)
             if (items.length > 0) calculate();
+            // อัปเดตสถานะปุ่มคำนวณทุกครั้งที่มีการเปลี่ยนแปลง
+            updateCalculateButton(); 
         }
 
 
@@ -291,6 +293,8 @@
                 container.classList.replace('border-orange-200', 'border-gray-200');
             }
             if (items.length > 0) calculate();
+            // อัปเดตสถานะปุ่มคำนวณทุกครั้งที่มีการเปลี่ยนแปลง
+            updateCalculateButton(); 
         }
 
 
