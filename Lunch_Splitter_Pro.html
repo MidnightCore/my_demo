@@ -49,7 +49,8 @@
 
 <body class="text-gray-800 pb-20">
 
-    <div class="max-w-lg mx-auto bg-white min-h-screen sm:min-h-0 sm:mt-10 sm:rounded-3xl sm:shadow-xl overflow-hidden relative">
+    <div
+        class="max-w-lg mx-auto bg-white min-h-screen sm:min-h-0 sm:mt-10 sm:rounded-3xl sm:shadow-xl overflow-hidden relative">
 
         <!-- Header -->
         <div class="bg-blue-600 p-6 text-white text-center rounded-b-3xl sm:rounded-t-3xl sm:rounded-b-none shadow-md">
@@ -62,13 +63,17 @@
             <!-- Section 1: เพิ่มเพื่อน -->
             <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
                 <h2 class="font-medium text-blue-800 mb-3 flex items-center gap-2">
-                    <span class="bg-blue-200 text-blue-700 w-6 h-6 rounded-full flex items-center justify-center text-sm">1</span>
+                    <span
+                        class="bg-blue-200 text-blue-700 w-6 h-6 rounded-full flex items-center justify-center text-sm">1
+                    </span>
                     เพิ่มรายชื่อเพื่อน
                 </h2>
                 <div class="flex gap-2">
                     <input type="text" id="personName" placeholder="ชื่อเพื่อน (กด Enter เพื่อเพิ่ม)"
                         class="flex-1 w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm">
-                    <button onclick="addPerson()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-medium transition shadow-sm active:scale-95">เพิ่ม</button>
+                    <button onclick="addPerson()"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-medium transition shadow-sm active:scale-95">เพิ่ม
+                    </button>
                 </div>
                 <div id="peopleList" class="mt-3 flex flex-wrap gap-2 empty:hidden"></div>
             </div>
@@ -76,25 +81,44 @@
             <!-- Section 2: เพิ่มรายการอาหาร -->
             <div class="bg-green-50/50 p-4 rounded-2xl border border-green-100">
                 <h2 class="font-medium text-green-800 mb-3 flex items-center gap-2">
-                    <span class="bg-green-200 text-green-800 w-6 h-6 rounded-full flex items-center justify-center text-sm">2</span>
+                    <span
+                        class="bg-green-200 text-green-800 w-6 h-6 rounded-full flex items-center justify-center text-sm">2
+                    </span>
                     รายการอาหาร
                 </h2>
                 <div class="grid grid-cols-3 gap-2">
-                    <input type="text" id="itemName" placeholder="ชื่อเมนู" class="col-span-2 px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500 transition shadow-sm">
-                    <input type="number" id="itemPrice" placeholder="ราคา (฿)" class="col-span-1 px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500 transition shadow-sm">
+                    <input type="text" id="itemName" placeholder="ชื่อเมนู"
+                        class="col-span-2 px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500 transition shadow-sm">
+                    <input type="number" id="itemPrice" placeholder="ราคา (฿)"
+                        class="col-span-1 px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500 transition shadow-sm">
                 </div>
 
                 <div class="mt-4">
                     <div class="flex justify-between items-center mb-2">
                         <span class="text-sm text-gray-600 font-medium">ใครกินจานนี้บ้าง?</span>
-                        <button onclick="selectAllEaters()" class="text-xs text-blue-600 hover:text-blue-800 font-medium bg-blue-50 px-2 py-1 rounded">เลือกทุกคน</button>
+                        <button onclick="selectAllEaters()"
+                            class="text-xs text-blue-600 hover:text-blue-800 font-medium bg-blue-50 px-2 py-1 rounded">เลือกทุกคน
+                        </button>
                     </div>
                     <div id="eatersSelection" class="flex flex-wrap gap-2">
                         <div class="text-gray-400 text-sm italic w-full text-center py-2">กรุณาเพิ่มชื่อเพื่อนในข้อ 1 ก่อน</div>
                     </div>
                 </div>
 
-                <button onclick="addItem()" class="w-full mt-4 bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-medium transition shadow-sm active:scale-95">
+                <div class="mt-3 p-3 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-between">
+                    <div class="text-sm text-blue-800">
+                        <span class="font-semibold">ขี้เกียจพิมพ์?</span> สแกนใบเสร็จเลย
+                    </div>
+                    <input type="file" accept="image/*" capture="environment" id="receiptImage" class="hidden"
+                        onchange="processReceipt(event)" />
+                    <button onclick="document.getElementById('receiptImage').click()"
+                        class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg font-medium transition shadow-sm flex items-center gap-2">
+                        📸 ถ่ายรูปใบเสร็จ
+                    </button>
+                </div>
+
+                <button onclick="addItem()"
+                    class="w-full mt-4 bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-medium transition shadow-sm active:scale-95">
                     + เพิ่มรายการลงบิล
                 </button>
             </div>
@@ -123,7 +147,8 @@
             </button>
 
             <!-- สรุปผล -->
-            <div id="resultArea" class="hidden bg-yellow-50 p-5 rounded-2xl border border-yellow-200 shadow-inner mt-6 relative overflow-hidden">
+            <div id="resultArea"
+                class="hidden bg-yellow-50 p-5 rounded-2xl border border-yellow-200 shadow-inner mt-6 relative overflow-hidden">
                 <div class="absolute top-0 right-0 w-20 h-20 bg-yellow-200 rounded-bl-full -z-10 opacity-50"></div>
                 <h3 class="text-lg font-semibold text-yellow-800 mb-4 flex justify-between items-end">
                     💰 สรุปรายคน
@@ -170,19 +195,19 @@
             const toast = document.getElementById("toast");
             toast.innerText = message;
             toast.className = "show";
-            setTimeout(function() {
+            setTimeout(function () {
                 toast.className = toast.className.replace("show", "");
             }, 3000);
         }
 
         // Keyboard Events for better UX
-        document.getElementById('personName').addEventListener('keypress', function(e) {
+        document.getElementById('personName').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') addPerson();
         });
-        document.getElementById('itemPrice').addEventListener('keypress', function(e) {
+        document.getElementById('itemPrice').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') addItem();
         });
-        document.getElementById('itemName').addEventListener('keypress', function(e) {
+        document.getElementById('itemName').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') document.getElementById('itemPrice').focus();
         });
 
@@ -354,7 +379,7 @@
                     body.innerHTML += `
                     <tr>
                         <td class="px-4 py-3 border-b border-gray-100 text-gray-700">${p}</td>
-                        <td class="px-4 py-3 border-b border-gray-100 text-right font-medium text-gray-900">${final.toLocaleString('th-TH', {minimumFractionDigits:2, maximumFractionDigits:2})} บาท</td>
+                        <td class="px-4 py-3 border-b border-gray-100 text-right font-medium text-gray-900">${final.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท</td>
                     </tr>
                 `;
                 }
@@ -400,7 +425,7 @@
             people.forEach(p => {
                 const final = totals[p] * scMultiplier * vatMultiplier;
                 if (final > 0) {
-                    textToCopy += `${p}: ${final.toLocaleString('th-TH', {minimumFractionDigits:2, maximumFractionDigits:2})} บาท\n`;
+                    textToCopy += `${p}: ${final.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท\n`;
                 }
             });
 
@@ -415,7 +440,7 @@
                 navigator.clipboard.writeText(textToCopy).then(() => {
                     showToast("📋 คัดลอกลงคลิปบอร์ดแล้ว! (ไปวางในไลน์ได้เลย)");
                 });
-            } 
+            }
             // Fallback for older browsers or iframes (like this preview)
             else {
                 const textArea = document.createElement("textarea");
@@ -454,6 +479,7 @@
                 showToast("✨ เริ่มบิลใหม่แล้ว");
             }
         }
+
 
         // Initial Render
         renderPeople();
