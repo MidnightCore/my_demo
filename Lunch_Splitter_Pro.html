@@ -503,79 +503,6 @@
         function calculate() {
             if (items.length === 0) return showToast('⚠️ กรุณาเพิ่มรายการอาหารอย่างน้อย 1 อย่าง');
 
-            // ดึงค่าและถอดลูกน้ำออกก่อนคำนวณ
-            const disc = parseFloat(document.getElementById('discount').value.replace(/,/g, '')) || 0;
-            const sc = parseFloat(document.getElementById('serviceCharge').value) || 0;
-            const vat = parseFloat(document.getElementById('vat').value) || 0;
-            const isVatInc = document.getElementById('vatInclusiveToggle').checked;
-            const isScPre = document.getElementById('scBeforeDiscountToggle').checked;
-
-            let totals = {}; 
-            let rawSum = 0;
-            people.forEach(p => totals[p] = 0);
-            
-            items.forEach(it => {
-                const perHead = it.price / it.eaters.length;
-                it.eaters.forEach(p => totals[p] += perHead);
-                rawSum += it.price;
-            });
-
-            const discRatio = rawSum > 0 ? disc / rawSum : 0;
-            
-            // 1. คำนวณยอดรวมทั้งบิล (Grand Total) ให้เป๊ะตามใบเสร็จกระดาษ
-            const totalSc = isScPre ? rawSum * (sc / 100) : (rawSum - disc) * (sc / 100);
-            const totalVat = isVatInc ? 0 : (rawSum - disc + totalSc) * (vat / 100);
-            const exactGrandTotal = (rawSum - disc) + totalSc + totalVat;
-            const roundedGrandTotal = Math.round(exactGrandTotal * 100) / 100;
-
-            const body = document.getElementById('resultBody');
-            body.innerHTML = '';
-            
-            // 2. คัดเฉพาะคนที่มีรายการกินจริงๆ ออกมา
-            let payingPeople = people.filter(p => totals[p] > 0);
-            let sumOfRounded = 0;
-
-            payingPeople.forEach((p, index) => {
-                const rawHead = totals[p];
-                const afterDisc = rawHead - (rawHead * discRatio);
-                let scAmt = isScPre ? (rawHead * (sc / 100)) : (afterDisc * (sc / 100));
-                let vatAmt = isVatInc ? 0 : ((afterDisc + scAmt) * (vat / 100));
-                let final = afterDisc + scAmt + vatAmt;
-                
-                let displayAmount = 0;
-
-                // 3. ทริคบัญชี: คนสุดท้ายรับเศษส่วนต่าง (Rounding Error) ไป เพื่อให้ยอดรวมเป๊ะ
-                if (index === payingPeople.length - 1) {
-                    displayAmount = roundedGrandTotal - sumOfRounded;
-                    if (displayAmount < 0) displayAmount = Math.round(final * 100) / 100;
-                } else {
-                    displayAmount = Math.round(final * 100) / 100;
-                    sumOfRounded += displayAmount;
-                }
-
-                body.innerHTML += `<tr><td class="px-4 py-3 border-b border-gray-100 text-gray-700">${p}</td><td class="px-4 py-3 border-b border-gray-100 text-right font-medium text-gray-900">${displayAmount.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท</td></tr>`;
-            });
-
-            // แสดงยอด Grand Total ที่ตรงกับใบเสร็จเป๊ะๆ
-            document.getElementById('grandTotal').innerText = roundedGrandTotal.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            document.getElementById('resultArea').style.display = 'block';
-            document.getElementById('resultArea').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-
-        function copyToClipboard() {
-            if (items.length === 0) return;
-
-            let textToCopy = "📝 สรุปค่าอาหาร\n\n";
-
-            // ดึงข้อมูลจากตารางที่คำนวณและปรับเศษสตางค์เสร็จแล้วมาใช้เลย (เพื่อป้องกันเลขไม่ตรงกัน)
-            const rows = document.querySelectorAll('#resultBody tr');
-            rows.forEach(row => {
-                textToCopy += `${row.cells[0].innerText}: ${row.cells[1].innerText}\n`;
-            });
-
-            const grandTotalText = document.getElementById('grandTotal').innerText;
-            textToCopy += `\n💰 ยอดรวมทั้งหมด: ${grandTotalText} บาท`;
-            
             const discountInput = parseFloat(document.getElementById('discount').value.replace(/,/g, '')) || 0;
             const scInput = parseFloat(document.getElementById('serviceCharge').value) || 0;
             const vatInput = parseFloat(document.getElementById('vat').value) || 0;
@@ -583,10 +510,119 @@
             const isVatInclusive = document.getElementById('vatInclusiveToggle').checked;
             const isScBeforeDiscount = document.getElementById('scBeforeDiscountToggle').checked;
 
+            let totals = {};
+            let rawGrandTotal = 0;
+
+            people.forEach(p => totals[p] = 0);
+
+            // รวมยอดอาหารทั้งหมด
+            items.forEach(item => {
+                const perHead = item.price / item.eaters.length;
+                item.eaters.forEach(p => totals[p] += perHead);
+                rawGrandTotal += item.price;
+            });
+
+            // สัดส่วนส่วนลด
+            let discountRatio = 0;
+            if (rawGrandTotal > 0 && discountInput > 0) {
+                discountRatio = discountInput / rawGrandTotal;
+            }
+
+            const body = document.getElementById('resultBody');
+            body.innerHTML = '';
+            let finalGrandTotal = 0;
+
+            people.forEach(p => {
+                const rawHead = totals[p]; // ยอดกินเต็มๆ ของคนนี้
+                const discountAmount = rawHead * discountRatio; // ส่วนลดที่คนนี้ได้
+                const afterDiscount = rawHead - discountAmount; // ยอดหลังหักส่วนลด
+                
+                // คำนวณ SC (เช็คว่าคิดจากยอดเต็ม หรือ ยอดหลังหักส่วนลด)
+                let scAmount = isScBeforeDiscount ? (rawHead * (scInput / 100)) : (afterDiscount * (scInput / 100));
+                
+                // คำนวณ VAT (คิดจากยอดหลังหักส่วนลด + SC)
+                let vatAmount = isVatInclusive ? 0 : ((afterDiscount + scAmount) * (vatInput / 100));
+
+                const final = afterDiscount + scAmount + vatAmount;
+
+                if (final > 0) {
+                    finalGrandTotal += final;
+                    body.innerHTML += `
+                    <tr>
+                        <td class="px-4 py-3 border-b border-gray-100 text-gray-700">${p}</td>
+                        <td class="px-4 py-3 border-b border-gray-100 text-right font-medium text-gray-900">${final.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท</td>
+                    </tr>
+                `;
+                }
+            });
+
+            // คำนวณยอดรวมที่แม่นยำ
+            const totalDiscount = rawGrandTotal * discountRatio;
+            let totalSc = isScBeforeDiscount ? rawGrandTotal * (scInput / 100) : (rawGrandTotal - totalDiscount) * (scInput / 100);
+            let totalVat = isVatInclusive ? 0 : (rawGrandTotal - totalDiscount + totalSc) * (vatInput / 100);
+            
+            const accurateGrandTotal = (rawGrandTotal - totalDiscount) + totalSc + totalVat;
+
+            document.getElementById('grandTotal').innerText = accurateGrandTotal.toLocaleString('th-TH', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+
+            const resultArea = document.getElementById('resultArea');
+            resultArea.style.display = 'block';
+            resultArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+
+        function copyToClipboard() {
+            if (items.length === 0) return;
+
+            let textToCopy = "📝 สรุปค่าอาหาร\n\n";
+
+            const discountInput = parseFloat(document.getElementById('discount').value.replace(/,/g, '')) || 0;
+            const scInput = parseFloat(document.getElementById('serviceCharge').value) || 0;
+            const vatInput = parseFloat(document.getElementById('vat').value) || 0;
+            
+            const isVatInclusive = document.getElementById('vatInclusiveToggle').checked;
+            const isScBeforeDiscount = document.getElementById('scBeforeDiscountToggle').checked;
+
+            let totals = {};
+            let rawGrandTotal = 0;
+            people.forEach(p => totals[p] = 0);
+
+            items.forEach(item => {
+                const perHead = item.price / item.eaters.length;
+                item.eaters.forEach(p => totals[p] += perHead);
+                rawGrandTotal += item.price;
+            });
+
+            let discountRatio = 0;
+            if (rawGrandTotal > 0 && discountInput > 0) {
+                discountRatio = discountInput / rawGrandTotal;
+            }
+
+            people.forEach(p => {
+                const rawHead = totals[p];
+                const discountAmount = rawHead * discountRatio;
+                const afterDiscount = rawHead - discountAmount;
+                
+                let scAmount = isScBeforeDiscount ? (rawHead * (scInput / 100)) : (afterDiscount * (scInput / 100));
+                let vatAmount = isVatInclusive ? 0 : ((afterDiscount + scAmount) * (vatInput / 100));
+                
+                const final = afterDiscount + scAmount + vatAmount;
+
+                if (final > 0) {
+                    textToCopy += `${p}: ${final.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท\n`;
+                }
+            });
+
+            const grandTotalText = document.getElementById('grandTotal').innerText;
+            textToCopy += `\n💰 ยอดรวมทั้งหมด: ${grandTotalText} บาท`;
+            
             // เพิ่มข้อความแสดงรายละเอียดส่วนลด/SC/VAT
             if (discountInput > 0 || scInput > 0 || vatInput > 0) {
                 let details = [];
-                if (discountInput > 0) details.push(`ส่วนลด ${discountInput.toLocaleString('th-TH')}บ.`);
+                if (discountInput > 0) details.push(`ส่วนลด ${discountInput}บ.`);
                 if (scInput > 0) details.push(`SC ${scInput}% ${isScBeforeDiscount ? '(จากยอดเต็ม)' : ''}`);
                 if (vatInput > 0) details.push(`VAT ${vatInput}% ${isVatInclusive ? '(รวมในราคาแล้ว)' : ''}`);
                 
