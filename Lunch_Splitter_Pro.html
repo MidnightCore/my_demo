@@ -480,9 +480,87 @@
         }
 
 
-        // ====== ฟังก์ชันสำหรับสแกนใบเสร็จผ่าน Vercel ======
+        // ====== ฟังก์ชันสำหรับสแกนใบเสร็จผ่าน Vercel (เพิ่มระบบบีบอัดรูป) ======
         async function processReceipt(event) {
             const file = event.target.files[0];
+            if (!file) return;
+
+            showToast('⏳ กำลังบีบอัดรูปและวิเคราะห์ใบเสร็จ...');
+
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = function(e) {
+                const img = new Image();
+                img.src = e.target.result;
+                
+                // เมื่อรูปโหลดเข้า memory เสร็จ ให้เริ่มบีบอัด
+                img.onload = async function() {
+                    // 1. ตั้งค่าขนาดสูงสุดของรูป (1200px ก็พอให้ AI อ่านตัวหนังสือออกสบายๆ แล้ว)
+                    const MAX_WIDTH = 1200;
+                    const MAX_HEIGHT = 1200;
+                    let width = img.width;
+                    let height = img.height;
+
+                    // 2. คำนวณสัดส่วนใหม่ให้ไม่เกิน MAX_WIDTH / MAX_HEIGHT
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+
+                    // 3. สร้าง Canvas เพื่อวาดรูปลงไปใหม่ด้วยขนาดที่เล็กลง
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // 4. แปลงรูปจาก Canvas กลับเป็น Base64 (กำหนดคุณภาพที่ 70% หรือ 0.7)
+                    const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                    const base64Image = compressedDataUrl.split(',')[1];
+                    const mimeType = 'image/jpeg'; // บังคับเป็น JPEG เพื่อลดขนาด
+
+                    try {
+                        // ⚠️ อย่าลืมใส่ URL Vercel ของคุณตรงนี้ ⚠️
+                        const response = await fetch('https://ใส่_URL_VERCEL_ของคุณที่นี่/api/scan', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                base64Image: base64Image,
+                                mimeType: mimeType
+                            })
+                        });
+
+                        const data = await response.json();
+
+                        if (data.candidates && data.candidates.length > 0) {
+                            let aiText = data.candidates[0].content.parts[0].text;
+                            aiText = aiText.replace(/```json/g, '').replace(/```/g, '').trim();
+                            try {
+                                const parsedData = JSON.parse(aiText);
+                                applyReceiptData(parsedData);
+                            } catch (e) {
+                                console.error("JSON Parse Error:", aiText);
+                                showToast('❌ ข้อมูลที่ AI ส่งกลับมาผิดพลาด ลองใหม่อีกครั้ง');
+                            }
+                        } else {
+                            showToast('❌ ไม่สามารถอ่านข้อมูลจากรูปนี้ได้');
+                        }
+                    } catch (error) {
+                        console.error(error);
+                        showToast('❌ เกิดข้อผิดพลาดในการเชื่อมต่อกับ Vercel API');
+                    } finally {
+                        event.target.value = ''; // รีเซ็ต input file
+                    }
+                };
+            };
+        }            const file = event.target.files[0];
             if (!file) return;
 
             showToast('⏳ กำลังให้ AI วิเคราะห์ใบเสร็จ กรุณารอสักครู่...');
