@@ -270,8 +270,9 @@
                 container.classList.replace('bg-green-50', 'bg-gray-50');
                 container.classList.replace('border-green-200', 'border-gray-200');
             }
-            // ให้คำนวณยอดใหม่ทันทีที่สลับสวิตช์ (ถ้ามีรายการอาหารแล้ว)
-            if (items.length > 0) calculate();
+            // เช็คความถูกต้อง: มีอาหาร และทุกรายการมีคนหาร ถึงจะยอมให้คำนวณ
+            const isValid = items.length > 0 && items.every(it => it.eaters.length > 0);
+            if (isValid) calculate();
             // อัปเดตสถานะปุ่มคำนวณทุกครั้งที่มีการเปลี่ยนแปลง
             updateCalculateButton(); 
         }
@@ -292,7 +293,9 @@
                 container.classList.replace('bg-orange-50', 'bg-gray-50');
                 container.classList.replace('border-orange-200', 'border-gray-200');
             }
-            if (items.length > 0) calculate();
+            // เช็คความถูกต้อง: มีอาหาร และทุกรายการมีคนหาร ถึงจะยอมให้คำนวณ
+            const isValid = items.length > 0 && items.every(it => it.eaters.length > 0);
+            if (isValid) calculate();
             // อัปเดตสถานะปุ่มคำนวณทุกครั้งที่มีการเปลี่ยนแปลง
             updateCalculateButton(); 
         }
