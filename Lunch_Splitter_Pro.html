@@ -129,7 +129,7 @@
 
             <!-- Section 3: รายการที่เพิ่มแล้ว -->
             <div id="itemsDisplay" class="hidden">
-                <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">รายการบิลปัจจุบัน</h3>
+                <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">รายการบิลปัจจุบัน (คลิกที่ชื่อเพื่อแก้ไข)</h3>
                 <div id="itemListContents" class="space-y-2"></div>
             </div>
 
@@ -137,9 +137,9 @@
             <!-- Section 4: ภาษีและบริการ -->
             <div class="flex flex-col gap-3">
                 <div class="flex gap-3">
-                    <div class="flex-1 bg-red-50 p-3 rounded-xl border border-red-100">
-                        <label class="text-xs text-red-500 block mb-1">Discount (฿)</label>
-                        <input type="number" id="discount" value="0" class="w-full bg-transparent text-lg font-medium outline-none text-red-800">
+                    <div class="flex-1 bg-green-50 p-3 rounded-xl border border-gray-200">
+                        <label class="text-xs text-green-500 block mb-1">Discount (฿)</label>
+                        <input type="number" id="discount" value="0" class="w-full bg-transparent text-lg font-medium outline-none text-green-800">
                     </div>
                     <div class="flex-1 bg-gray-50 p-3 rounded-xl border border-gray-200">
                         <label class="text-xs text-gray-500 block mb-1">Service Charge (%)</label>
@@ -174,24 +174,15 @@
 
 
             <!-- Button: คำนวณ -->
-            <button onclick="calculate()" class="w-full bg-gray-900 hover:bg-black text-white text-lg font-semibold py-4 rounded-xl shadow-lg transition active:scale-95 flex justify-center items-center gap-2">
+            <button id="calculateBtn" onclick="calculate()" disabled class="w-full bg-gray-900 hover:bg-black text-white text-lg font-semibold py-4 rounded-xl shadow-lg transition active:scale-95 flex justify-center items-center gap-2 opacity-50 cursor-not-allowed">
                 🧾 สรุปยอดที่ต้องจ่าย
             </button>
 
 
             <!-- สรุปผล -->
-            <div id="resultArea"
-                class="hidden bg-yellow-50 p-5 rounded-2xl border border-yellow-200 shadow-inner mt-6 relative overflow-hidden">
+            <div id="resultArea" class="hidden bg-yellow-50 p-5 rounded-2xl border border-yellow-200 shadow-inner mt-6 relative overflow-hidden">
                 <div class="absolute top-0 right-0 w-20 h-20 bg-yellow-200 rounded-bl-full -z-10 opacity-50"></div>
-                <h3 class="text-lg font-semibold text-yellow-800 mb-4 flex justify-between items-end">
-                    💰 สรุปรายคน
-                    <button onclick="copyToClipboard()" class="text-sm bg-white border border-yellow-300 text-yellow-700 px-3 py-1 rounded-lg hover:bg-yellow-100 transition shadow-sm flex items-center gap-1 active:scale-95">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                        </svg>
-                        ก๊อปปี้ส่งไลน์
-                    </button>
-                </h3>
+                <h3 class="text-lg font-semibold text-yellow-800 mb-4">💰 สรุปรายคน</h3>
                 <div class="bg-white rounded-xl overflow-hidden shadow-sm border border-yellow-100">
                     <table class="w-full text-sm text-left">
                         <tbody id="resultBody" class="divide-y divide-gray-100"></tbody>
@@ -204,8 +195,18 @@
                         <span class="text-red-600 ml-1 font-medium">บาท</span>
                     </div>
                 </div>
-                <button onclick="resetAll()" class="w-full mt-6 bg-white border-2 border-gray-200 text-gray-600 font-medium py-2 rounded-xl hover:bg-gray-50 transition">
-                    ↻ เริ่มบิลใหม่
+                <button onclick="copyToClipboard()" class="w-full mt-6 bg-green-600 hover:bg-green-700 text-white py-4 rounded-xl font-semibold shadow-lg transition active:scale-95 flex justify-center items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    ก๊อปปี้สรุปยอดส่งไลน์
+                </button>
+            </div>
+
+
+            <div class="text-center pt-4">
+                <button onclick="resetAll()" class="text-xs text-red-400 hover:text-red-600 transition underline opacity-60">
+                    ↻ ลบข้อมูลทั้งหมดและเริ่มบิลใหม่
                 </button>
             </div>
 
@@ -315,6 +316,7 @@
             people.push(name);
             input.value = '';
             renderPeople();
+            renderItems();
         }
 
 
@@ -417,18 +419,52 @@
             if (items.length > 0) {
                 div.classList.remove('hidden');
                 content.innerHTML = items.map((item, i) => `
-                <div class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm flex justify-between items-center">
-                    <div>
-                        <div class="font-medium text-gray-800">${item.name} <span class="text-green-600 ml-1">฿${item.price}</span></div>
-                        <div class="text-xs text-gray-500 mt-0.5">หารโดย: ${item.eaters.join(', ')}</div>
+                <div class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm space-y-2">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <input type="text" value="${item.name}" onchange="editItemName(${i}, this.value)" class="w-full bg-transparent font-medium text-gray-800 focus:border-b focus:border-blue-300 outline-none">
+                            <div class="text-green-600 font-semibold text-sm">฿${item.price.toLocaleString('th-TH')}</div>
+                        </div>
+                        <button onclick="removeItem(${i})" class="text-red-400 p-1 hover:bg-red-50 rounded-lg transition"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button>
                     </div>
-                    <button onclick="removeItem(${i})" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
-                    </button>
-                </div>
-            `).join('');
+                    <div class="flex flex-wrap gap-1">
+                        ${people.map(p => {
+                            const active = item.eaters.includes(p);
+                            return `<button onclick="toggleItemEater(${i}, '${p}')" class="text-[10px] px-2 py-0.5 rounded-full border transition ${active ? 'bg-green-100 border-green-300 text-green-700' : 'bg-gray-50 text-gray-400 border-gray-100'}">${p}</button>`;
+                        }).join('')}
+                    </div>
+                </div>`).join('');
             } else {
                 div.classList.add('hidden');
+            }
+            // เรียกใช้ฟังก์ชันเช็คปุ่มคำนวณทุกครั้งที่มีการอัปเดตรายการ
+            updateCalculateButton();
+        }
+
+
+        function editItemName(idx, val) { 
+            items[idx].name = val; 
+        }
+        
+
+        function toggleItemEater(itemIdx, pName) {
+            const idx = items[itemIdx].eaters.indexOf(pName);
+            if (idx > -1) items[itemIdx].eaters.splice(idx, 1);
+            else items[itemIdx].eaters.push(pName);
+            renderItems();
+            document.getElementById('resultArea').style.display = 'none';
+        }
+
+
+        function updateCalculateButton() {
+            const btn = document.getElementById('calculateBtn');
+            // เช็คว่ามีรายการอาหาร และทุกรายการต้องมีคนหารอย่างน้อย 1 คน
+            const isValid = items.length > 0 && items.every(it => it.eaters.length > 0);
+            btn.disabled = !isValid;
+            if (isValid) {
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
             }
         }
 
