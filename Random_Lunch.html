@@ -109,8 +109,8 @@
         }
 
         .result-box {
-            background: #fff3f3;
-            border: 2px dashed #ffb8b8;
+            background: #ffdd002d;
+            border: 2px dashed #ffcc00;
             border-radius: 15px;
             padding: 20px;
             margin-bottom: 20px;
@@ -121,7 +121,7 @@
         }
 
         #menuResult {
-            font-size: 1.8rem;
+            font-size: 5.9vw;
             font-weight: 600;
             color: var(--primary);
             margin: 0;
@@ -155,12 +155,12 @@
                 <option value="noodle">🍜 เส้น</option>
                 <option value="spicy">🌶️ จัดจ้าน</option>
                 <option value="japanese">🍣 อาหารญี่ปุ่น</option>
-                <option value="speed">🍗 ง่ายๆ</option>
+                <option value="speed">🍗 อื่นๆ</option>
             </select>
         </div>
 
         <div class="result-box">
-            <p id="menuResult">กดปุ่มเพื่อเริ่มสุ่ม</p>
+            <p id="menuResult">กินอะไรดีนะ...</p>
             <div id="dessertResult"></div>
         </div>
 
@@ -226,7 +226,7 @@
                     resultEl.classList.remove('randomizing');
                     // สุ่มครั้งสุดท้ายเพื่อให้ได้ผลลัพธ์จริง
                     const finalIndex = Math.floor(Math.random() * filteredMenus.length);
-                    resultEl.innerText = "🎉 " + filteredMenus[finalIndex].name + " 🎉";
+                    resultEl.innerText = filteredMenus[finalIndex].name + " 🎉";
                 }
             }, 50); // ความเร็วในการกระพริบ (ms)
         }
