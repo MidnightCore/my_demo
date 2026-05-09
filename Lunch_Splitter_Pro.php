@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lunch Splitter Pro</title>
+    <!-- ใช้ Tailwind CSS สำหรับความสวยงามแบบ Modern -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Kanit', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        /* ซ่อนลูกศรใน input type number */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* สไตล์สำหรับ Toast Notification */
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 12px 24px;
+            position: fixed;
+            z-index: 50;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s, bottom 0.3s;
+        }
+
+        #toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 50px;
+        }
+    </style>
+</head>
+
+<body class="text-gray-800 pb-20">
+
+    <div class="max-w-lg mx-auto bg-white min-h-screen sm:min-h-0 sm:mt-10 sm:rounded-3xl sm:shadow-xl overflow-hidden relative">
+
+        <!-- Header -->
+        <div class="bg-blue-600 p-6 text-white text-center rounded-b-3xl sm:rounded-t-3xl sm:rounded-b-none shadow-md">
+            <h1 class="text-2xl font-semibold tracking-wide">🍽️ แอปหารค่าข้าว</h1>
+            <p class="text-blue-100 text-sm mt-1">คำนวณง่าย แฟร์ทุกคน</p>
+        </div>
+
+        <div class="p-6 space-y-6">
+
+            <!-- Section 1: เพิ่มเพื่อน -->
+            <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
+                <h2 class="font-medium text-blue-800 mb-3 flex items-center gap-2">
+                    <span class="bg-blue-200 text-blue-700 w-6 h-6 rounded-full flex items-center justify-center text-sm">1</span>
+                    เพิ่มรายชื่อเพื่อน
+                </h2>
+                <div class="flex gap-2">
+                    <input type="text" id="personName" placeholder="ชื่อเพื่อน (กด Enter เพื่อเพิ่ม)"
+                        class="flex-1 w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm">
+                    <button onclick="addPerson()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-medium transition shadow-sm active:scale-95">เพิ่ม</button>
+                </div>
+                <div id="peopleList" class="mt-3 flex flex-wrap gap-2 empty:hidden"></div>
+            </div>
+
+            <!-- Section 2: เพิ่มรายการอาหาร -->
+            <div class="bg-green-50/50 p-4 rounded-2xl border border-green-100">
+                <h2 class="font-medium text-green-800 mb-3 flex items-center gap-2">
+                    <span class="bg-green-200 text-green-800 w-6 h-6 rounded-full flex items-center justify-center text-sm">2</span>
+                    รายการอาหาร
+                </h2>
+                <div class="grid grid-cols-3 gap-2">
+                    <input type="text" id="itemName" placeholder="ชื่อเมนู" class="col-span-2 px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500 transition shadow-sm">
+                    <input type="number" id="itemPrice" placeholder="ราคา (฿)" class="col-span-1 px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500 transition shadow-sm">
+                </div>
+
+                <div class="mt-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm text-gray-600 font-medium">ใครกินจานนี้บ้าง?</span>
+                        <button onclick="selectAllEaters()" class="text-xs text-blue-600 hover:text-blue-800 font-medium bg-blue-50 px-2 py-1 rounded">เลือกทุกคน</button>
+                    </div>
+                    <div id="eatersSelection" class="flex flex-wrap gap-2">
+                        <div class="text-gray-400 text-sm italic w-full text-center py-2">กรุณาเพิ่มชื่อเพื่อนในข้อ 1 ก่อน</div>
+                    </div>
+                </div>
+
+                <button onclick="addItem()" class="w-full mt-4 bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-medium transition shadow-sm active:scale-95">
+                    + เพิ่มรายการลงบิล
+                </button>
+            </div>
+
+            <!-- Section 3: รายการที่เพิ่มแล้ว -->
+            <div id="itemsDisplay" class="hidden">
+                <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">รายการบิลปัจจุบัน</h3>
+                <div id="itemListContents" class="space-y-2"></div>
+            </div>
+
+            <!-- Section 4: ภาษีและบริการ -->
+            <div class="flex gap-4">
+                <div class="flex-1 bg-gray-50 p-3 rounded-xl border border-gray-200">
+                    <label class="text-xs text-gray-500 block mb-1">Service Charge (%)</label>
+                    <input type="number" id="serviceCharge" value="0" class="w-full bg-transparent text-lg font-medium outline-none text-gray-800">
+                </div>
+                <div class="flex-1 bg-gray-50 p-3 rounded-xl border border-gray-200">
+                    <label class="text-xs text-gray-500 block mb-1">VAT (%)</label>
+                    <input type="number" id="vat" value="0" class="w-full bg-transparent text-lg font-medium outline-none text-gray-800">
+                </div>
+            </div>
+
+            <!-- Button: คำนวณ -->
+            <button onclick="calculate()" class="w-full bg-gray-900 hover:bg-black text-white text-lg font-semibold py-4 rounded-xl shadow-lg transition active:scale-95 flex justify-center items-center gap-2">
+                🧾 สรุปยอดที่ต้องจ่าย
+            </button>
+
+            <!-- สรุปผล -->
+            <div id="resultArea" class="hidden bg-yellow-50 p-5 rounded-2xl border border-yellow-200 shadow-inner mt-6 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-20 h-20 bg-yellow-200 rounded-bl-full -z-10 opacity-50"></div>
+                <h3 class="text-lg font-semibold text-yellow-800 mb-4 flex justify-between items-end">
+                    💰 สรุปรายคน
+                    <button onclick="copyToClipboard()" class="text-sm bg-white border border-yellow-300 text-yellow-700 px-3 py-1 rounded-lg hover:bg-yellow-100 transition shadow-sm flex items-center gap-1 active:scale-95">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        ก๊อปปี้ส่งไลน์
+                    </button>
+                </h3>
+
+                <div class="bg-white rounded-xl overflow-hidden shadow-sm border border-yellow-100">
+                    <table class="w-full text-sm text-left">
+                        <tbody id="resultBody" class="divide-y divide-gray-100"></tbody>
+                    </table>
+                </div>
+
+                <div class="mt-4 pt-4 border-t border-yellow-200/60 flex justify-between items-end">
+                    <span class="text-gray-600 font-medium">ยอดรวมทั้งบิล</span>
+                    <div class="text-right">
+                        <span id="grandTotal" class="text-2xl font-bold text-red-600">0.00</span>
+                        <span class="text-red-600 ml-1 font-medium">บาท</span>
+                    </div>
+                </div>
+
+                <button onclick="resetAll()" class="w-full mt-6 bg-white border-2 border-gray-200 text-gray-600 font-medium py-2 rounded-xl hover:bg-gray-50 transition">
+                    ↻ เริ่มบิลใหม่
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Custom Toast Message -->
+    <div id="toast">ข้อความแจ้งเตือน</div>
+
+    <script>
+        // State Variables
+        let people = [];
+        let items = [];
+
+        // Utility: Show Custom Toast
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.innerText = message;
+            toast.className = "show";
+            setTimeout(function() {
+                toast.className = toast.className.replace("show", "");
+            }, 3000);
+        }
+
+        // Keyboard Events for better UX
+        document.getElementById('personName').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') addPerson();
+        });
+        document.getElementById('itemPrice').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') addItem();
+        });
+        document.getElementById('itemName').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') document.getElementById('itemPrice').focus();
+        });
+
+        function addPerson() {
+            const input = document.getElementById('personName');
+            const name = input.value.trim();
+            if (!name) return showToast('⚠️ กรุณาพิมพ์ชื่อเพื่อน');
+            if (people.includes(name)) return showToast('⚠️ มีชื่อนี้แล้ว');
+
+            people.push(name);
+            input.value = '';
+            renderPeople();
+        }
+
+        function renderPeople() {
+            const list = document.getElementById('peopleList');
+            const selection = document.getElementById('eatersSelection');
+
+            if (people.length === 0) {
+                list.innerHTML = '';
+                selection.innerHTML = '<div class="text-gray-400 text-sm italic w-full text-center py-2">กรุณาเพิ่มชื่อเพื่อนในข้อ 1 ก่อน</div>';
+                return;
+            }
+
+            // วาดรายชื่อด้านบน
+            list.innerHTML = people.map((p, i) => `
+            <div class="bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-full text-sm flex items-center gap-2 shadow-sm">
+                ${p} 
+                <button onclick="removePerson(${i})" class="text-red-400 hover:text-red-600 font-bold ml-1 rounded-full w-5 h-5 flex items-center justify-center bg-red-50">&times;</button>
+            </div>
+        `).join('');
+
+            // วาด Chips สำหรับเลือก
+            selection.innerHTML = people.map(p => `
+            <div onclick="toggleEater(this)" data-name="${p}" class="eater-chip px-4 py-2 bg-gray-100 border-2 border-transparent text-gray-600 rounded-full text-sm cursor-pointer transition-all select-none hover:bg-gray-200">
+                ${p}
+            </div>
+        `).join('');
+        }
+
+        function toggleEater(el) {
+            el.classList.toggle('bg-gray-100');
+            el.classList.toggle('text-gray-600');
+            el.classList.toggle('bg-green-100');
+            el.classList.toggle('border-green-400');
+            el.classList.toggle('text-green-700');
+            el.classList.toggle('font-medium');
+            el.classList.toggle('selected'); // marker class
+        }
+
+        function selectAllEaters() {
+            if (people.length === 0) return;
+            const chips = document.querySelectorAll('.eater-chip');
+            chips.forEach(chip => {
+                if (!chip.classList.contains('selected')) {
+                    toggleEater(chip);
+                }
+            });
+        }
+
+        function removePerson(index) {
+            const name = people[index];
+            people.splice(index, 1);
+            // ลบคนออกจากรายการอาหารที่เคยเลือกไว้
+            items.forEach(item => {
+                item.eaters = item.eaters.filter(e => e !== name);
+            });
+            // ถ้ารายการไหนไม่มีคนกินแล้ว ให้ลบทิ้ง
+            items = items.filter(item => item.eaters.length > 0);
+
+            renderPeople();
+            renderItems();
+            // ซ่อนผลลัพธ์ถ้ามีการเปลี่ยนข้อมูล
+            document.getElementById('resultArea').style.display = 'none';
+        }
+
+        function addItem() {
+            const nameInput = document.getElementById('itemName');
+            const priceInput = document.getElementById('itemPrice');
+            const selectedChips = document.querySelectorAll('.eater-chip.selected');
+
+            const name = nameInput.value.trim() || 'รายการอาหาร';
+            const price = parseFloat(priceInput.value);
+            const eaters = Array.from(selectedChips).map(c => c.getAttribute('data-name'));
+
+            if (isNaN(price) || price <= 0) return showToast('⚠️ กรุณาระบุราคาให้ถูกต้อง');
+            if (eaters.length === 0) return showToast('⚠️ กรุณาเลือกคนกินอย่างน้อย 1 คน');
+
+            items.push({
+                name,
+                price,
+                eaters
+            });
+
+            // Reset inputs
+            nameInput.value = '';
+            priceInput.value = '';
+            nameInput.focus();
+            document.querySelectorAll('.eater-chip.selected').forEach(c => toggleEater(c));
+
+            renderItems();
+            document.getElementById('resultArea').style.display = 'none';
+            showToast(`✅ เพิ่ม ${name} แล้ว`);
+        }
+
+        function renderItems() {
+            const div = document.getElementById('itemsDisplay');
+            const content = document.getElementById('itemListContents');
+
+            if (items.length > 0) {
+                div.classList.remove('hidden');
+                content.innerHTML = items.map((item, i) => `
+                <div class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm flex justify-between items-center">
+                    <div>
+                        <div class="font-medium text-gray-800">${item.name} <span class="text-green-600 ml-1">฿${item.price}</span></div>
+                        <div class="text-xs text-gray-500 mt-0.5">หารโดย: ${item.eaters.join(', ')}</div>
+                    </div>
+                    <button onclick="removeItem(${i})" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                    </button>
+                </div>
+            `).join('');
+            } else {
+                div.classList.add('hidden');
+            }
+        }
+
+        function removeItem(index) {
+            items.splice(index, 1);
+            renderItems();
+            document.getElementById('resultArea').style.display = 'none';
+        }
+
+        function calculate() {
+            if (items.length === 0) return showToast('⚠️ กรุณาเพิ่มรายการอาหารอย่างน้อย 1 อย่าง');
+
+            const scInput = parseFloat(document.getElementById('serviceCharge').value) || 0;
+            const vatInput = parseFloat(document.getElementById('vat').value) || 0;
+
+            // รูปแบบการคำนวณมาตรฐาน: (ราคา + SC) + VAT
+            const scMultiplier = 1 + (scInput / 100);
+            const vatMultiplier = 1 + (vatInput / 100);
+
+            let totals = {};
+            let rawGrandTotal = 0;
+
+            // กำหนดค่าเริ่มต้นเป็น 0 ให้ทุกคน
+            people.forEach(p => totals[p] = 0);
+
+            // หารค่าอาหารทีละรายการ
+            items.forEach(item => {
+                const perHead = item.price / item.eaters.length;
+                item.eaters.forEach(p => totals[p] += perHead);
+                rawGrandTotal += item.price;
+            });
+
+            const body = document.getElementById('resultBody');
+            body.innerHTML = '';
+
+            let finalGrandTotal = 0;
+
+            // แสดงผลลัพธ์
+            people.forEach(p => {
+                // คำนวณ SC และ VAT รายบุคคล
+                const final = totals[p] * scMultiplier * vatMultiplier;
+
+                if (final > 0) {
+                    finalGrandTotal += final;
+                    body.innerHTML += `
+                    <tr>
+                        <td class="px-4 py-3 border-b border-gray-100 text-gray-700">${p}</td>
+                        <td class="px-4 py-3 border-b border-gray-100 text-right font-medium text-gray-900">${final.toLocaleString('th-TH', {minimumFractionDigits:2, maximumFractionDigits:2})} บาท</td>
+                    </tr>
+                `;
+                }
+            });
+
+            // จัดการเรื่องทศนิยมที่อาจทำให้ผลรวมไม่ตรง (เช่น 0.01 บาท)
+            // คำนวณยอดรวมจริงๆ จากฐานเงินทั้งหมด
+            const accurateGrandTotal = rawGrandTotal * scMultiplier * vatMultiplier;
+
+            document.getElementById('grandTotal').innerText = accurateGrandTotal.toLocaleString('th-TH', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+
+            const resultArea = document.getElementById('resultArea');
+            resultArea.style.display = 'block';
+
+            // เลื่อนหน้าจอลงไปดูผลลัพธ์แบบนุ่มนวล
+            resultArea.scrollIntoView({
+                behavior: 'smooth',
+                block: 'nearest'
+            });
+        }
+
+        function copyToClipboard() {
+            if (items.length === 0) return;
+
+            let textToCopy = "📝 สรุปค่าอาหาร\n\n";
+
+            const scInput = parseFloat(document.getElementById('serviceCharge').value) || 0;
+            const vatInput = parseFloat(document.getElementById('vat').value) || 0;
+            const scMultiplier = 1 + (scInput / 100);
+            const vatMultiplier = 1 + (vatInput / 100);
+
+            let totals = {};
+            people.forEach(p => totals[p] = 0);
+
+            items.forEach(item => {
+                const perHead = item.price / item.eaters.length;
+                item.eaters.forEach(p => totals[p] += perHead);
+            });
+
+            people.forEach(p => {
+                const final = totals[p] * scMultiplier * vatMultiplier;
+                if (final > 0) {
+                    textToCopy += `${p}: ${final.toLocaleString('th-TH', {minimumFractionDigits:2, maximumFractionDigits:2})} บาท\n`;
+                }
+            });
+
+            const grandTotalText = document.getElementById('grandTotal').innerText;
+            textToCopy += `\n💰 ยอดรวมทั้งหมด: ${grandTotalText} บาท`;
+            if (scInput > 0 || vatInput > 0) {
+                textToCopy += `\n(รวม SC ${scInput}% / VAT ${vatInput}%)`;
+            }
+
+            // วิธีก็อปปี้แบบเก่าและใหม่ให้ครอบคลุม
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    showToast("📋 คัดลอกลงคลิปบอร์ดแล้ว! (ไปวางในไลน์ได้เลย)");
+                });
+            } 
+            // Fallback for older browsers or iframes (like this preview)
+            else {
+                const textArea = document.createElement("textarea");
+                textArea.value = textToCopy;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-999999px";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showToast("📋 คัดลอกลงคลิปบอร์ดแล้ว!");
+                } catch (err) {
+                    showToast("❌ คัดลอกล้มเหลว");
+                }
+                textArea.remove();
+            }
+        }
+
+        function resetAll() {
+            if (confirm('ต้องการลบข้อมูลทั้งหมด และเริ่มบิลใหม่ใช่หรือไม่?')) {
+                people = [];
+                items = [];
+                document.getElementById('personName').value = '';
+                document.getElementById('itemName').value = '';
+                document.getElementById('itemPrice').value = '';
+                document.getElementById('serviceCharge').value = '0';
+                document.getElementById('vat').value = '0';
+                document.getElementById('resultArea').style.display = 'none';
+                renderPeople();
+                renderItems();
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+                showToast("✨ เริ่มบิลใหม่แล้ว");
+            }
+        }
+
+        // Initial Render
+        renderPeople();
+    </script>
+</body>
+
+</html>
