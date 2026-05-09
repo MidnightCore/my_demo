@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สุ่มเมนูมื้อเที่ยง</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ff6b6b;
+            --primary-hover: #ff5252;
+            --secondary: #4ecdc4;
+            --secondary-hover: #45b7d1;
+            --bg: #f7f9fc;
+            --text: #2d3436;
+        }
+
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background: white;
+            padding: 30px 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: var(--text);
+        }
+
+        .filter-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #636e72;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #dfe6e9;
+            font-family: 'Prompt', sans-serif;
+            font-size: 1rem;
+            background-color: #fcfcfc;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            /* เอาลูกศร default ออกบนมือถือ */
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Prompt', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            margin-bottom: 15px;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-main {
+            background-color: var(--primary);
+        }
+
+        .btn-main:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-dessert {
+            background-color: var(--secondary);
+            font-size: 1rem;
+        }
+
+        .btn-dessert:hover {
+            background-color: var(--secondary-hover);
+        }
+
+        .result-box {
+            background: #fff3f3;
+            border: 2px dashed #ffb8b8;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        #menuResult {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        #dessertResult {
+            font-size: 1.2rem;
+            color: var(--secondary);
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        /* Utility สำหรับตอนกำลังสุ่มให้ข้อความกระพริบ */
+        .randomizing {
+            color: #b2bec3 !important;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>เที่ยงนี้กินอะไรดี? 🍽️</h1>
+
+        <div class="filter-group">
+            <label for="categoryFilter">เลือกหมวดหมู่:</label>
+            <select id="categoryFilter">
+                <option value="all">🎲 ทุกหมวดหมู่</option>
+                <option value="noodle">🍜 เส้น</option>
+                <option value="spicy">🌶️ จัดจ้าน</option>
+                <option value="japanese">🍣 อาหารญี่ปุ่น</option>
+                <option value="speed">🍗 ง่ายๆ</option>
+            </select>
+        </div>
+
+        <div class="result-box">
+            <p id="menuResult">กดปุ่มเพื่อเริ่มสุ่ม</p>
+            <div id="dessertResult"></div>
+        </div>
+
+        <button class="btn btn-main" onclick="startRandomMain()">สุ่มร้านอาหาร</button>
+        <button class="btn btn-dessert" onclick="startRandomDessert()">🍰 สุ่มของว่าง</button>
+    </div>
+
+    <script>
+        // ข้อมูลเมนูอาหารแยกตามหมวดหมู่
+        const mainMenus = [
+            { name: "ก๋วยเตี๋ยว ซอยโปโล", category: "noodle" },
+            { name: "ก๋วยเตี๋ยว food court", category: "noodle" },
+            { name: "ก๋วยเตี๋ยว all season", category: "noodle" },
+
+            { name: "อาหารอีสาน food court", category: "spicy" },
+            
+            { name: "Shogun ชั้น1", category: "japanese" },
+            { name: "ToKioJo ชั้น1 ข้างข้าวมันไก่", category: "japanese" },
+            { name: "Misho หน้าตึก", category: "japanese" },
+            { name: "หาร้านที่เซ็นเวิลด์", category: "japanese" },
+
+            { name: "ข้าวมันไก่ลาโพโพ ชั้น1", category: "speed" },
+            { name: "Arno's หน้าตึก", category: "speed" },
+            { name: "Simmer ชั้น1", category: "speed" },
+            { name: "ไก่ทอกเจ๊กี ซอยโปโล", category: "speed" }
+        ];
+
+        // ข้อมูลของหวานและเครื่องดื่ม
+        const desserts = [
+            "เดินหาที่ food court", 
+            "7-11", 
+            "ชานม Kamu", 
+            "S&P", 
+            "ร้านชานม หลังตึก",
+            "Potato Corner"
+        ];
+
+        let randomInterval;
+
+        function startRandomMain() {
+            const filterValue = document.getElementById('categoryFilter').value;
+            const resultEl = document.getElementById('menuResult');
+
+            // กรองข้อมูลตามหมวดหมู่
+            let filteredMenus = mainMenus;
+            if (filterValue !== 'all') {
+                filteredMenus = mainMenus.filter(menu => menu.category === filterValue);
+            }
+
+            // แอนิเมชันสุ่ม
+            let counter = 0;
+            resultEl.classList.add('randomizing');
+
+            clearInterval(randomInterval);
+            randomInterval = setInterval(() => {
+                const randomIndex = Math.floor(Math.random() * filteredMenus.length);
+                resultEl.innerText = filteredMenus[randomIndex].name;
+                counter++;
+
+                // หยุดสุ่มเมื่อครบกำหนด (ประมาณครึ่งวินาที)
+                if (counter > 15) {
+                    clearInterval(randomInterval);
+                    resultEl.classList.remove('randomizing');
+                    // สุ่มครั้งสุดท้ายเพื่อให้ได้ผลลัพธ์จริง
+                    const finalIndex = Math.floor(Math.random() * filteredMenus.length);
+                    resultEl.innerText = "🎉 " + filteredMenus[finalIndex].name + " 🎉";
+                }
+            }, 50); // ความเร็วในการกระพริบ (ms)
+        }
+
+        function startRandomDessert() {
+            const dessertEl = document.getElementById('dessertResult');
+            let counter = 0;
+
+            dessertEl.classList.add('randomizing');
+            let dessertInterval = setInterval(() => {
+                const randomIndex = Math.floor(Math.random() * desserts.length);
+                dessertEl.innerText = desserts[randomIndex];
+                counter++;
+
+                if (counter > 15) {
+                    clearInterval(dessertInterval);
+                    dessertEl.classList.remove('randomizing');
+                    const finalIndex = Math.floor(Math.random() * desserts.length);
+                    dessertEl.innerText = "+ " + desserts[finalIndex] + " 🥤";
+                }
+            }, 50);
+        }
+    </script>
+</body>
+
+</html>
