@@ -495,7 +495,7 @@
 
                 try {
                     // ⚠️ อย่าลืมเปลี่ยน URL ตรงนี้เป็นโดเมน Vercel ของคุณเอง ⚠️
-                    const response = await fetch('https://receipt-api-psi.vercel.app', {
+                    const response = await fetch('https://receipt-api-psi.vercel.app/api/scan', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
