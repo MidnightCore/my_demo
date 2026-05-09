@@ -136,7 +136,11 @@
 
             <!-- Section 4: ภาษีและบริการ -->
             <div class="flex flex-col gap-3">
-                <div class="flex gap-4">
+                <div class="flex gap-3">
+                    <div class="flex-1 bg-red-50 p-3 rounded-xl border border-red-100">
+                        <label class="text-xs text-red-500 block mb-1">Discount (฿)</label>
+                        <input type="number" id="discount" value="0" class="w-full bg-transparent text-lg font-medium outline-none text-red-800">
+                    </div>
                     <div class="flex-1 bg-gray-50 p-3 rounded-xl border border-gray-200">
                         <label class="text-xs text-gray-500 block mb-1">Service Charge (%)</label>
                         <input type="number" id="serviceCharge" value="0" class="w-full bg-transparent text-lg font-medium outline-none text-gray-800">
@@ -154,6 +158,16 @@
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" id="vatInclusiveToggle" class="sr-only peer" onchange="toggleVatType()">
                         <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                    </label>
+                </div>
+                <div class="bg-gray-50 p-3 rounded-xl border border-gray-200 flex justify-between items-center transition-colors duration-300 mt-2" id="scToggleContainer">
+                    <div>
+                        <div class="text-sm font-medium text-gray-700">ฐานการคิด SC</div>
+                        <div class="text-xs text-gray-500 transition-colors" id="scTypeLabel">คิดจากยอดหลังหักส่วนลด (ร้านทั่วไป)</div>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="scBeforeDiscountToggle" class="sr-only peer" onchange="toggleScType()">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
                     </label>
                 </div>
             </div>
@@ -224,7 +238,6 @@
             const isInclusive = document.getElementById('vatInclusiveToggle').checked;
             const label = document.getElementById('vatTypeLabel');
             const container = document.getElementById('vatToggleContainer');
-            
             if (isInclusive) {
                 label.innerText = 'Vat ใน (ราคารวม VAT แล้ว ไม่บวกเพิ่ม)';
                 label.classList.replace('text-gray-500', 'text-green-600');
@@ -236,8 +249,26 @@
                 container.classList.replace('bg-green-50', 'bg-gray-50');
                 container.classList.replace('border-green-200', 'border-gray-200');
             }
-            
             // ให้คำนวณยอดใหม่ทันทีที่สลับสวิตช์ (ถ้ามีรายการอาหารแล้ว)
+            if (items.length > 0) calculate();
+        }
+
+
+        function toggleScType() {
+            const isBeforeDiscount = document.getElementById('scBeforeDiscountToggle').checked;
+            const label = document.getElementById('scTypeLabel');
+            const container = document.getElementById('scToggleContainer');
+            if (isBeforeDiscount) {
+                label.innerText = 'คิดจากยอดเต็มก่อนหักส่วนลด (แบบโรงแรม)';
+                label.classList.replace('text-gray-500', 'text-orange-600');
+                container.classList.replace('bg-gray-50', 'bg-orange-50');
+                container.classList.replace('border-gray-200', 'border-orange-200');
+            } else {
+                label.innerText = 'คิดจากยอดหลังหักส่วนลด (ร้านทั่วไป)';
+                label.classList.replace('text-orange-600', 'text-gray-500');
+                container.classList.replace('bg-orange-50', 'bg-gray-50');
+                container.classList.replace('border-orange-200', 'border-gray-200');
+            }
             if (items.length > 0) calculate();
         }
 
@@ -412,38 +443,47 @@
         function calculate() {
             if (items.length === 0) return showToast('⚠️ กรุณาเพิ่มรายการอาหารอย่างน้อย 1 อย่าง');
 
+            const discountInput = parseFloat(document.getElementById('discount').value) || 0;
             const scInput = parseFloat(document.getElementById('serviceCharge').value) || 0;
             const vatInput = parseFloat(document.getElementById('vat').value) || 0;
-
-            // เช็คว่าเปิดโหมด Vat ใน อยู่หรือไม่
+            
             const isVatInclusive = document.getElementById('vatInclusiveToggle').checked;
-
-            const scMultiplier = 1 + (scInput / 100);
-            // ถ้าเป็น Vat ใน ให้ตัวคูณเป็น 1 (คือไม่ต้องบวกเพิ่มในยอดสุทธิ)
-            const vatMultiplier = isVatInclusive ? 1 : (1 + (vatInput / 100));
+            const isScBeforeDiscount = document.getElementById('scBeforeDiscountToggle').checked;
 
             let totals = {};
             let rawGrandTotal = 0;
 
-            // กำหนดค่าเริ่มต้นเป็น 0 ให้ทุกคน
             people.forEach(p => totals[p] = 0);
 
-            // หารค่าอาหารทีละรายการ
+            // รวมยอดอาหารทั้งหมด
             items.forEach(item => {
                 const perHead = item.price / item.eaters.length;
                 item.eaters.forEach(p => totals[p] += perHead);
                 rawGrandTotal += item.price;
             });
 
+            // สัดส่วนส่วนลด
+            let discountRatio = 0;
+            if (rawGrandTotal > 0 && discountInput > 0) {
+                discountRatio = discountInput / rawGrandTotal;
+            }
+
             const body = document.getElementById('resultBody');
             body.innerHTML = '';
-
             let finalGrandTotal = 0;
 
-            // แสดงผลลัพธ์
             people.forEach(p => {
-                // คำนวณ SC และ VAT รายบุคคล
-                const final = totals[p] * scMultiplier * vatMultiplier;
+                const rawHead = totals[p]; // ยอดกินเต็มๆ ของคนนี้
+                const discountAmount = rawHead * discountRatio; // ส่วนลดที่คนนี้ได้
+                const afterDiscount = rawHead - discountAmount; // ยอดหลังหักส่วนลด
+                
+                // คำนวณ SC (เช็คว่าคิดจากยอดเต็ม หรือ ยอดหลังหักส่วนลด)
+                let scAmount = isScBeforeDiscount ? (rawHead * (scInput / 100)) : (afterDiscount * (scInput / 100));
+                
+                // คำนวณ VAT (คิดจากยอดหลังหักส่วนลด + SC)
+                let vatAmount = isVatInclusive ? 0 : ((afterDiscount + scAmount) * (vatInput / 100));
+
+                const final = afterDiscount + scAmount + vatAmount;
 
                 if (final > 0) {
                     finalGrandTotal += final;
@@ -456,9 +496,12 @@
                 }
             });
 
-            // จัดการเรื่องทศนิยมที่อาจทำให้ผลรวมไม่ตรง (เช่น 0.01 บาท)
-            // คำนวณยอดรวมจริงๆ จากฐานเงินทั้งหมด
-            const accurateGrandTotal = rawGrandTotal * scMultiplier * vatMultiplier;
+            // คำนวณยอดรวมที่แม่นยำ
+            const totalDiscount = rawGrandTotal * discountRatio;
+            let totalSc = isScBeforeDiscount ? rawGrandTotal * (scInput / 100) : (rawGrandTotal - totalDiscount) * (scInput / 100);
+            let totalVat = isVatInclusive ? 0 : (rawGrandTotal - totalDiscount + totalSc) * (vatInput / 100);
+            
+            const accurateGrandTotal = (rawGrandTotal - totalDiscount) + totalSc + totalVat;
 
             document.getElementById('grandTotal').innerText = accurateGrandTotal.toLocaleString('th-TH', {
                 minimumFractionDigits: 2,
@@ -467,12 +510,7 @@
 
             const resultArea = document.getElementById('resultArea');
             resultArea.style.display = 'block';
-
-            // เลื่อนหน้าจอลงไปดูผลลัพธ์แบบนุ่มนวล
-            resultArea.scrollIntoView({
-                behavior: 'smooth',
-                block: 'nearest'
-            });
+            resultArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
 
@@ -481,24 +519,38 @@
 
             let textToCopy = "📝 สรุปค่าอาหาร\n\n";
 
+            const discountInput = parseFloat(document.getElementById('discount').value) || 0;
             const scInput = parseFloat(document.getElementById('serviceCharge').value) || 0;
             const vatInput = parseFloat(document.getElementById('vat').value) || 0;
             
             const isVatInclusive = document.getElementById('vatInclusiveToggle').checked;
-
-            const scMultiplier = 1 + (scInput / 100);
-            const vatMultiplier = isVatInclusive ? 1 : (1 + (vatInput / 100));
+            const isScBeforeDiscount = document.getElementById('scBeforeDiscountToggle').checked;
 
             let totals = {};
+            let rawGrandTotal = 0;
             people.forEach(p => totals[p] = 0);
 
             items.forEach(item => {
                 const perHead = item.price / item.eaters.length;
                 item.eaters.forEach(p => totals[p] += perHead);
+                rawGrandTotal += item.price;
             });
 
+            let discountRatio = 0;
+            if (rawGrandTotal > 0 && discountInput > 0) {
+                discountRatio = discountInput / rawGrandTotal;
+            }
+
             people.forEach(p => {
-                const final = totals[p] * scMultiplier * vatMultiplier;
+                const rawHead = totals[p];
+                const discountAmount = rawHead * discountRatio;
+                const afterDiscount = rawHead - discountAmount;
+                
+                let scAmount = isScBeforeDiscount ? (rawHead * (scInput / 100)) : (afterDiscount * (scInput / 100));
+                let vatAmount = isVatInclusive ? 0 : ((afterDiscount + scAmount) * (vatInput / 100));
+                
+                const final = afterDiscount + scAmount + vatAmount;
+
                 if (final > 0) {
                     textToCopy += `${p}: ${final.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท\n`;
                 }
@@ -506,22 +558,24 @@
 
             const grandTotalText = document.getElementById('grandTotal').innerText;
             textToCopy += `\n💰 ยอดรวมทั้งหมด: ${grandTotalText} บาท`;
-            if (scInput > 0 || vatInput > 0) {
-                let vatText = isVatInclusive ? `VAT ${vatInput}% (ร้านรวมมาให้แล้ว)` : `VAT ${vatInput}%`;
-                let scText = scInput > 0 ? `SC ${scInput}%` : '';
+            
+            // เพิ่มข้อความแสดงรายละเอียดส่วนลด/SC/VAT
+            if (discountInput > 0 || scInput > 0 || vatInput > 0) {
+                let details = [];
+                if (discountInput > 0) details.push(`ส่วนลด ${discountInput}บ.`);
+                if (scInput > 0) details.push(`SC ${scInput}% ${isScBeforeDiscount ? '(จากยอดเต็ม)' : ''}`);
+                if (vatInput > 0) details.push(`VAT ${vatInput}% ${isVatInclusive ? '(รวมในราคาแล้ว)' : ''}`);
                 
-                let taxDetails = [scText, vatText].filter(t => t !== '').join(' / ');
-                textToCopy += `\n(คิดแบบ ${taxDetails})`;
+                if (details.length > 0) {
+                    textToCopy += `\n(${details.join(' / ')})`;
+                }
             }
 
-            // วิธีก็อปปี้แบบเก่าและใหม่ให้ครอบคลุม
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(textToCopy).then(() => {
                     showToast("📋 คัดลอกลงคลิปบอร์ดแล้ว! (ไปวางในไลน์ได้เลย)");
                 });
-            }
-            // Fallback for older browsers or iframes (like this preview)
-            else {
+            } else {
                 const textArea = document.createElement("textarea");
                 textArea.value = textToCopy;
                 textArea.style.position = "fixed";
@@ -549,9 +603,11 @@
                 document.getElementById('itemPrice').value = '';
                 document.getElementById('serviceCharge').value = '0';
                 document.getElementById('vat').value = '0';
-                // เพิ่ม 2 บรรทัดนี้เพื่อรีเซ็ต Toggle
+                document.getElementById('discount').value = '0';
                 document.getElementById('vatInclusiveToggle').checked = false;
                 toggleVatType();
+                document.getElementById('scBeforeDiscountToggle').checked = false;
+                toggleScType();
                 document.getElementById('resultArea').style.display = 'none';
                 renderPeople();
                 renderItems();
@@ -664,6 +720,9 @@
             }
             if (data.vat_percent !== undefined) {
                 document.getElementById('vat').value = data.vat_percent;
+            }
+            if (data.discount_amount !== undefined) {
+                document.getElementById('discount').value = data.discount_amount;
             }
             if (data.items && Array.isArray(data.items)) {
                 data.items.forEach(item => {
