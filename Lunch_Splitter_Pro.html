@@ -139,7 +139,7 @@
                 <div class="flex gap-3">
                     <div class="flex-1 bg-green-50 p-3 rounded-xl border border-gray-200">
                         <label class="text-xs text-green-500 block mb-1">Discount (฿)</label>
-                        <input type="number" id="discount" value="0" class="w-full bg-transparent text-lg font-medium outline-none text-green-800">
+                        <input type="text" inputmode="decimal" id="discount" value="0" oninput="formatCurrencyInput(this)" class="w-full bg-transparent text-lg font-medium outline-none text-red-800">
                     </div>
                     <div class="flex-1 bg-gray-50 p-3 rounded-xl border border-gray-200">
                         <label class="text-xs text-gray-500 block mb-1">Service Charge (%)</label>
@@ -199,14 +199,14 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                     </svg>
-                    ก๊อปปี้สรุปยอดส่งไลน์
+                    Copy สรุปยอด
                 </button>
             </div>
 
 
             <div class="text-center pt-4">
                 <button onclick="resetAll()" class="text-xs text-red-400 hover:text-red-600 transition underline opacity-60">
-                    ↻ ลบข้อมูลทั้งหมดและเริ่มบิลใหม่
+                    ↻ ลบข้อมูลทั้งหมด และเริ่มบิลใหม่
                 </button>
             </div>
 
@@ -232,6 +232,26 @@
         // State Variables
         let people = [];
         let items = [];
+
+
+        // ฟังก์ชันสำหรับใส่ลูกน้ำ (Comma) อัตโนมัติขณะพิมพ์
+        function formatCurrencyInput(input) {
+            // 1. ลบตัวอักษรที่ไม่ใช่ตัวเลขและจุดทศนิยมออกให้หมด
+            let value = input.value.replace(/[^\d.]/g, '');
+            // 2. ป้องกันการพิมพ์จุดทศนิยมเกิน 1 ตัว
+            let parts = value.split('.');
+            if (parts.length > 2) {
+                value = parts[0] + '.' + parts.slice(1).join('');
+                parts = value.split('.');
+            }
+            // 3. ใส่คอมม่าในหลักพัน หมื่น แสน
+            if (value) {
+                parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                input.value = parts.join('.');
+            } else {
+                input.value = '';
+            }
+        }
 
 
         // ฟังก์ชันจัดการ Toggle VAT
@@ -479,7 +499,7 @@
         function calculate() {
             if (items.length === 0) return showToast('⚠️ กรุณาเพิ่มรายการอาหารอย่างน้อย 1 อย่าง');
 
-            const discountInput = parseFloat(document.getElementById('discount').value) || 0;
+            const discountInput = parseFloat(document.getElementById('discount').value.replace(/,/g, '')) || 0;
             const scInput = parseFloat(document.getElementById('serviceCharge').value) || 0;
             const vatInput = parseFloat(document.getElementById('vat').value) || 0;
             
@@ -555,7 +575,7 @@
 
             let textToCopy = "📝 สรุปค่าอาหาร\n\n";
 
-            const discountInput = parseFloat(document.getElementById('discount').value) || 0;
+            const discountInput = parseFloat(document.getElementById('discount').value.replace(/,/g, '')) || 0;
             const scInput = parseFloat(document.getElementById('serviceCharge').value) || 0;
             const vatInput = parseFloat(document.getElementById('vat').value) || 0;
             
@@ -758,7 +778,9 @@
                 document.getElementById('vat').value = data.vat_percent;
             }
             if (data.discount_amount !== undefined) {
-                document.getElementById('discount').value = data.discount_amount;
+                const discEl = document.getElementById('discount');
+                discEl.value = data.discount_amount;
+                formatCurrencyInput(discEl); // สั่งให้ใส่ลูกน้ำทันทีที่ AI ดึงข้อมูลมาวาง
             }
             if (data.items && Array.isArray(data.items)) {
                 data.items.forEach(item => {
