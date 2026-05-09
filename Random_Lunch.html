@@ -70,7 +70,6 @@
             outline: none;
             cursor: pointer;
             appearance: none;
-            /* เอาลูกศร default ออกบนมือถือ */
         }
 
         .btn {
@@ -118,14 +117,16 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
+            overflow: hidden; /* ป้องกันตัวหนังสือล้นตอนเด้ง */
         }
 
         #menuResult {
-            font-size: 5.9vw;
+            font-size: 22px;
             font-weight: 600;
             color: var(--primary);
             margin: 0;
             line-height: 1.2;
+            display: inline-block;
         }
 
         #dessertResult {
@@ -133,12 +134,29 @@
             color: var(--secondary);
             margin-top: 10px;
             font-weight: 600;
+            display: inline-block;
         }
 
-        /* Utility สำหรับตอนกำลังสุ่มให้ข้อความกระพริบ */
+        /* --- Animations --- */
+        @keyframes slotSpin {
+            0% { opacity: 0.7; transform: translateY(-5px); filter: blur(1px); }
+            50% { opacity: 1; transform: translateY(0); filter: blur(0); }
+            100% { opacity: 0.7; transform: translateY(5px); filter: blur(1px); }
+        }
+
+        @keyframes popOut {
+            0% { transform: scale(0.8); opacity: 0; }
+            40% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
         .randomizing {
             color: #b2bec3 !important;
-            font-style: italic;
+            animation: slotSpin 0.1s infinite linear;
+        }
+
+        .finish-pop {
+            animation: popOut 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
         }
     </style>
 </head>
@@ -169,26 +187,21 @@
     </div>
 
     <script>
-        // ข้อมูลเมนูอาหารแยกตามหมวดหมู่
         const mainMenus = [
             { name: "ก๋วยเตี๋ยว ซอยโปโล", category: "noodle" },
             { name: "ก๋วยเตี๋ยว food court", category: "noodle" },
             { name: "ก๋วยเตี๋ยว all season", category: "noodle" },
-
             { name: "อาหารอีสาน food court", category: "spicy" },
-            
             { name: "Shogun ชั้น1", category: "japanese" },
             { name: "ToKioJo ชั้น1 ข้างข้าวมันไก่", category: "japanese" },
             { name: "Misho หน้าตึก", category: "japanese" },
             { name: "หาร้านที่เซ็นเวิลด์", category: "japanese" },
-
             { name: "ข้าวมันไก่ลาโพโพ ชั้น1", category: "speed" },
             { name: "Arno's หน้าตึก", category: "speed" },
             { name: "Simmer ชั้น1", category: "speed" },
-            { name: "ไก่ทอกเจ๊กี ซอยโปโล", category: "speed" }
+            { name: "ไก่ทอดเจ๊กี ซอยโปโล", category: "speed" }
         ];
 
-        // ข้อมูลของหวานและเครื่องดื่ม
         const desserts = [
             "เดินหาที่ food court", 
             "7-11", 
@@ -204,14 +217,15 @@
             const filterValue = document.getElementById('categoryFilter').value;
             const resultEl = document.getElementById('menuResult');
 
-            // กรองข้อมูลตามหมวดหมู่
             let filteredMenus = mainMenus;
             if (filterValue !== 'all') {
                 filteredMenus = mainMenus.filter(menu => menu.category === filterValue);
             }
 
-            // แอนิเมชันสุ่ม
             let counter = 0;
+            
+            // ล้างคลาสแอนิเมชันเก่าออกก่อนเริ่มสุ่มใหม่
+            resultEl.classList.remove('finish-pop');
             resultEl.classList.add('randomizing');
 
             clearInterval(randomInterval);
@@ -220,22 +234,26 @@
                 resultEl.innerText = filteredMenus[randomIndex].name;
                 counter++;
 
-                // หยุดสุ่มเมื่อครบกำหนด (ประมาณครึ่งวินาที)
                 if (counter > 15) {
                     clearInterval(randomInterval);
                     resultEl.classList.remove('randomizing');
-                    // สุ่มครั้งสุดท้ายเพื่อให้ได้ผลลัพธ์จริง
+                    
                     const finalIndex = Math.floor(Math.random() * filteredMenus.length);
                     resultEl.innerText = filteredMenus[finalIndex].name + " 🎉";
+                    
+                    // สุ่มเสร็จให้แสดงเอฟเฟกต์เด้ง
+                    resultEl.classList.add('finish-pop');
                 }
-            }, 50); // ความเร็วในการกระพริบ (ms)
+            }, 50); 
         }
 
         function startRandomDessert() {
             const dessertEl = document.getElementById('dessertResult');
             let counter = 0;
 
+            dessertEl.classList.remove('finish-pop');
             dessertEl.classList.add('randomizing');
+            
             let dessertInterval = setInterval(() => {
                 const randomIndex = Math.floor(Math.random() * desserts.length);
                 dessertEl.innerText = desserts[randomIndex];
@@ -244,8 +262,11 @@
                 if (counter > 15) {
                     clearInterval(dessertInterval);
                     dessertEl.classList.remove('randomizing');
+                    
                     const finalIndex = Math.floor(Math.random() * desserts.length);
                     dessertEl.innerText = "+ " + desserts[finalIndex] + " 🥤";
+                    
+                    dessertEl.classList.add('finish-pop');
                 }
             }, 50);
         }
