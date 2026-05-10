@@ -278,6 +278,7 @@
         }
 
 
+        // ฟังก์ชันจัดการ Toggle Service Charge
         function toggleScType() {
             const isBeforeDiscount = document.getElementById('scBeforeDiscountToggle').checked;
             const label = document.getElementById('scTypeLabel');
@@ -316,8 +317,6 @@
         function showLoading() {
             document.getElementById("loadingOverlay").classList.remove("hidden");
         }
-
-
         function hideLoading() {
             document.getElementById("loadingOverlay").classList.add("hidden");
         }
@@ -335,6 +334,7 @@
         });
 
 
+        // ฟังก์ชันเพิ่มเพื่อนใหม่ลงในรายชื่อ
         function addPerson() {
             const input = document.getElementById('personName');
             const name = input.value.trim();
@@ -347,9 +347,11 @@
         }
 
 
+        // ฟังก์ชันแสดงรายชื่อเพื่อนและ Chips สำหรับเลือกคนกินในแต่ละรายการอาหาร
         function renderPeople() {
             const list = document.getElementById('peopleList');
             const selection = document.getElementById('eatersSelection');
+            // เช็คว่ามีรายชื่อเพื่อนหรือไม่ ถ้าไม่มีให้แสดงข้อความแจ้งเตือน และซ่อน Chips สำหรับเลือกคนกิน
             if (people.length === 0) {
                 list.innerHTML = '';
                 selection.innerHTML = '<div class="text-gray-400 text-sm italic w-full text-center py-2">กรุณาเพิ่มชื่อเพื่อนในข้อ 1 ก่อน</div>';
@@ -373,6 +375,7 @@
         }
 
 
+        // ฟังก์ชันสลับสถานะการเลือกคนกินในรายการอาหาร
         function toggleEater(el) {
             el.classList.toggle('bg-gray-100');
             el.classList.toggle('text-gray-600');
@@ -384,6 +387,7 @@
         }
 
 
+        // ฟังก์ชันเลือกคนกินทั้งหมดในรายการอาหาร
         function selectAllEaters() {
             if (people.length === 0) return;
             const chips = document.querySelectorAll('.eater-chip');
@@ -395,6 +399,7 @@
         }
 
 
+        // ฟังก์ชันลบคนออกจากรายชื่อ
         function removePerson(index) {
             const name = people[index];
             people.splice(index, 1);
@@ -411,18 +416,17 @@
         }
 
 
+        // ฟังก์ชันเพิ่มรายการอาหารใหม่
         function addItem() {
             const nameInput = document.getElementById('itemName');
             const priceInput = document.getElementById('itemPrice');
             const selectedChips = document.querySelectorAll('.eater-chip.selected');
-
             const name = nameInput.value.trim() || 'รายการอาหาร';
             const price = parseFloat(priceInput.value);
             const eaters = Array.from(selectedChips).map(c => c.getAttribute('data-name'));
 
             if (isNaN(price) || price <= 0) return showToast('⚠️ กรุณาระบุราคาให้ถูกต้อง');
             if (eaters.length === 0) return showToast('⚠️ กรุณาเลือกคนกินอย่างน้อย 1 คน');
-
             items.push({
                 name,
                 price,
@@ -440,9 +444,11 @@
         }
 
 
+        // ฟังก์ชันแสดงรายการอาหารที่เพิ่มเข้ามา
         function renderItems() {
             const div = document.getElementById('itemsDisplay');
             const content = document.getElementById('itemListContents');
+            // เช็คว่ามีรายการอาหารหรือไม่ ถ้ามีให้แสดง ถ้าไม่มีให้ซ่อน
             if (items.length > 0) {
                 div.classList.remove('hidden');
                 content.innerHTML = items.map((item, i) => `
@@ -461,7 +467,9 @@
                         }).join('')}
                     </div>
                 </div>`).join('');
-            } else {
+            } 
+            // ถ้าไม่มีรายการอาหารเลย ให้ซ่อนทั้งส่วนแสดงรายการ
+            else {
                 div.classList.add('hidden');
             }
             // เรียกใช้ฟังก์ชันเช็คปุ่มคำนวณทุกครั้งที่มีการอัปเดตรายการ
@@ -469,11 +477,13 @@
         }
 
 
+        // ฟังก์ชันแก้ไขชื่อรายการอาหาร
         function editItemName(idx, val) { 
             items[idx].name = val; 
         }
-        
 
+
+        // ฟังก์ชันสลับสถานะการเลือกคนกินในแต่ละรายการ
         function toggleItemEater(itemIdx, pName) {
             const idx = items[itemIdx].eaters.indexOf(pName);
             if (idx > -1) items[itemIdx].eaters.splice(idx, 1);
@@ -483,6 +493,7 @@
         }
 
 
+        // ฟังก์ชันตรวจสอบและอัปเดตสถานะของปุ่มคำนวณ
         function updateCalculateButton() {
             const btn = document.getElementById('calculateBtn');
             // เช็คว่ามีรายการอาหาร และทุกรายการต้องมีคนหารอย่างน้อย 1 คน
@@ -496,6 +507,7 @@
         }
 
 
+        // ฟังก์ชันลบรายการอาหาร
         function removeItem(index) {
             items.splice(index, 1);
             renderItems();
@@ -503,6 +515,7 @@
         }
 
 
+        // ฟังก์ชันคำนวณยอดที่แต่ละคนต้องจ่าย
         function calculate() {
             if (items.length === 0) return showToast('⚠️ กรุณาเพิ่มรายการอาหารอย่างน้อย 1 อย่าง');
 
@@ -577,6 +590,7 @@
         }
 
 
+        // ฟังก์ชันคัดลอกข้อความสรุปยอดไปยังคลิปบอร์ด
         function copyToClipboard() {
             if (items.length === 0) return;
 
@@ -621,24 +635,28 @@
 
             const grandTotalText = document.getElementById('grandTotal').innerText;
             textToCopy += `\n💰 ยอดรวมทั้งหมด: ${grandTotalText} บาท`;
-            
-            // เพิ่มข้อความแสดงรายละเอียดส่วนลด/SC/VAT
+
+            // เช็คว่ามีส่วนลด/SC/VAT หรือไม่ ถ้ามีให้เพิ่มรายละเอียดลงไปในข้อความที่คัดลอกด้วย
             if (discountInput > 0 || scInput > 0 || vatInput > 0) {
                 let details = [];
+                // เพิ่มข้อความแสดงรายละเอียดส่วนลด/SC/VAT
                 if (discountInput > 0) details.push(`ส่วนลด ${discountInput}บ.`);
                 if (scInput > 0) details.push(`SC ${scInput}% ${isScBeforeDiscount ? '(จากยอดเต็ม)' : ''}`);
                 if (vatInput > 0) details.push(`VAT ${vatInput}% ${isVatInclusive ? '(รวมในราคาแล้ว)' : ''}`);
                 
+                // ถ้ามีรายละเอียดใดๆ ให้เพิ่มลงไปในข้อความที่คัดลอก
                 if (details.length > 0) {
                     textToCopy += `\n(${details.join(' / ')})`;
                 }
             }
-
+            // เช็คว่าระบบรองรับการคัดลอกแบบใหม่หรือไม่ (Clipboard API) และทำการคัดลอก
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(textToCopy).then(() => {
                     showToast("📋 คัดลอกลงคลิปบอร์ดแล้ว! (ไปวางในไลน์ได้เลย)");
                 });
-            } else {
+            } 
+            // Fallback สำหรับเบราว์เซอร์ที่ไม่รองรับ Clipboard API
+            else {
                 const textArea = document.createElement("textarea");
                 textArea.value = textToCopy;
                 textArea.style.position = "fixed";
@@ -649,7 +667,8 @@
                 try {
                     document.execCommand('copy');
                     showToast("📋 คัดลอกลงคลิปบอร์ดแล้ว!");
-                } catch (err) {
+                } 
+                catch (err) {
                     showToast("❌ คัดลอกล้มเหลว");
                 }
                 textArea.remove();
@@ -657,6 +676,7 @@
         }
 
 
+        // ฟังก์ชันรีเซ็ตข้อมูลทั้งหมดและเริ่มบิลใหม่
         function resetAll() {
             if (confirm('ต้องการลบข้อมูลทั้งหมด และเริ่มบิลใหม่ใช่หรือไม่?')) {
                 people = [];
@@ -725,39 +745,66 @@
                     const base64Image = compressedDataUrl.split(',')[1];
                     const mimeType = 'image/jpeg';
 
-                    try {
-                        // ⚠️ ใส่ URL Vercel ของคุณ (อย่าลืมเช็คว่าถูกโดเมนนะ)
-                        const response = await fetch('https://receipt-api-psi.vercel.app/api/scan', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                base64Image: base64Image,
-                                mimeType: mimeType
-                            })
-                        });
-                        const data = await response.json();
+                    // === ระบบยิงซ้ำอัตโนมัติ (Auto-Retry) ป้องกัน AI แบบฟรีล่ม ===
+                    let maxRetries = 2; // ลองซ้ำสูงสุด 2 ครั้ง (รวมครั้งแรกเป็น 3 ครั้ง)
+                    let attempt = 0;
+                    let success = false;
 
-                        if (data.candidates && data.candidates.length > 0) {
-                            let aiText = data.candidates[0].content.parts[0].text;
-                            aiText = aiText.replace(/```json/g, '').replace(/```/g, '').trim();
-                            try {
-                                const parsedData = JSON.parse(aiText);
-                                applyReceiptData(parsedData);
-                            } catch (e) {
-                                console.error("JSON Parse Error:", aiText);
-                                showToast('❌ ข้อมูลที่ AI ส่งกลับมาผิดพลาด ลองใหม่อีกครั้ง');
+                    while (attempt <= maxRetries && !success) {
+                        try {
+                            if (attempt > 0) {
+                                showToast(`⏳ AI ไม่ว่าง กำลังลองใหม่ครั้งที่ ${attempt}...`);
+                                // หน่วงเวลา 2 วินาทีก่อนยิงซ้ำ เพื่อหลบ Rate Limit
+                                await new Promise(resolve => setTimeout(resolve, 2000));
                             }
-                        } else {
-                            showToast('❌ ไม่สามารถอ่านข้อมูลจากรูปนี้ได้');
+
+                            // ⚠️ ใส่ URL Vercel
+                            const response = await fetch('https://receipt-api-psi.vercel.app/api/scan', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    base64Image: base64Image,
+                                    mimeType: mimeType
+                                })
+                            });
+                            const data = await response.json();
+
+                            // เช็คว่า AI ส่งข้อมูลกลับมาสำเร็จ
+                            if (data.candidates && data.candidates.length > 0) {
+                                let aiText = data.candidates[0].content.parts[0].text;
+                                aiText = aiText.replace(/```json/g, '').replace(/```/g, '').trim();
+                                try {
+                                    const parsedData = JSON.parse(aiText);
+                                    applyReceiptData(parsedData);
+                                    success = true; // สำเร็จแล้ว เบรคลูปออกไปเลย
+                                } 
+                                catch (e) {
+                                    console.error("JSON Parse Error:", aiText);
+                                    if (attempt === maxRetries) showToast('❌ ข้อมูลที่ AI ส่งกลับมาผิดพลาด ลองใหม่อีกครั้ง');
+                                }
+                            } 
+                            // ถ้า AI แจ้ง Error ตรงๆ (เช่น Limit เต็ม)
+                            else if (data.error) {
+                                console.error("Gemini Error:", data.error);
+                                if (attempt === maxRetries) showToast('❌ AI เซิร์ฟเวอร์ทำงานหนักเกินไป ลองอีกครั้งใน 1 นาที');
+                            }
+                            // กรณีไม่มี candidates กลับมา
+                            else {
+                                if (attempt === maxRetries) showToast('❌ ไม่สามารถอ่านข้อมูลจากรูปนี้ได้');
+                            }
+                        } 
+                        // กรณีเน็ตหลุด หรือ Vercel ค้าง
+                        catch (error) {
+                            console.error(error);
+                            if (attempt === maxRetries) showToast('❌ เกิดข้อผิดพลาดในการเชื่อมต่อ API');
                         }
-                    } catch (error) {
-                        console.error(error);
-                        showToast('❌ เกิดข้อผิดพลาดในการเชื่อมต่อกับ Vercel API');
-                    } finally {
-                        // ปิดหน้าจอ Loading ทันทีที่ทำงานเสร็จ หรือเกิด Error
-                        hideLoading();
-                        event.target.value = ''; 
-                    }
+                        
+                        attempt++;
+                    } // จบ while loop
+
+                    // ปิดหน้าจอ Loading ทันทีที่ทำงานเสร็จ (ไม่ว่าจะสำเร็จหรือล้มเหลว)
+                    hideLoading();
+                    event.target.value = ''; 
                 };
                 
                 // ดัก Error กรณีโหลดภาพเข้า Memory ไม่สำเร็จ
@@ -778,19 +825,24 @@
 
         function applyReceiptData(data) {
             let foundItems = 0;
+            // เช็คว่ามีข้อมูล SC, VAT, Discount จาก AI ส่งกลับมาหรือไม่ และนำมาใส่ในฟิลด์ให้เลย (ถ้ามี)
             if (data.sc_percent !== undefined) {
                 document.getElementById('serviceCharge').value = data.sc_percent;
             }
+            // เช็คว่ามีข้อมูล VAT จาก AI ส่งกลับมาหรือไม่ และนำมาใส่ในฟิลด์ให้เลย (ถ้ามี)
             if (data.vat_percent !== undefined) {
                 document.getElementById('vat').value = data.vat_percent;
             }
+            // เช็คว่ามีข้อมูล discount จาก AI ส่งกลับมาหรือไม่ และนำมาใส่ในฟิลด์ให้เลย (ถ้ามี)
             if (data.discount_amount !== undefined) {
                 const discEl = document.getElementById('discount');
                 discEl.value = data.discount_amount;
                 formatCurrencyInput(discEl); // สั่งให้ใส่ลูกน้ำทันทีที่ AI ดึงข้อมูลมาวาง
             }
+            // เช็คว่ามีรายการอาหารในข้อมูลที่ AI ส่งกลับมาหรือไม่ และพยายามดึงข้อมูลออกมาใช้
             if (data.items && Array.isArray(data.items)) {
                 data.items.forEach(item => {
+                    // ตรวจสอบว่ารายการนั้นมีชื่อและราคาที่ถูกต้องหรือไม่ (ราคาเป็นตัวเลขและมากกว่า 0 และชื่อไม่ควรมีคำว่า "total")
                     if (item.name && item.price && item.price > 0 && !item.name.toLowerCase().includes('total')) {
                         items.push({
                             name: item.name,
@@ -801,12 +853,15 @@
                     }
                 });
             }
+            // ถ้าพบรายการอาหารอย่างน้อย 1 รายการ ให้แสดงผลลัพธ์ที่ได้จาก AI และแจ้งเตือนความสำเร็จ
             if (foundItems > 0) {
                 renderItems();
                 document.getElementById('resultArea').style.display = 'none';
                 showToast(`✅ สแกนสำเร็จ ได้มา ${foundItems} รายการ (อย่าลืมเช็คความถูกต้องอีกรอบนะ)`);
-            } else {
-                showToast('⚠️ AI อ่านใบเสร็จได้ แต่ไม่เจอรายการอาหารเลย');
+            } 
+            // ถ้าไม่พบรายการอาหารเลย ให้แจ้งเตือนว่า AI อ่านใบเสร็จได้ แต่ไม่เจอข้อมูลที่ต้องการ
+            else {
+                showToast('⚠️ AI อ่านใบเสร็จได้ แต่ไม่เจอรายการอาหารเลย (ลองถ่ายรูปใหม่ หรือใส่ข้อมูลเองดูนะ)');
             }
         }
         // ==================================================
