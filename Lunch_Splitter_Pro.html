@@ -206,7 +206,7 @@
 
             <div class="text-center pt-4">
                 <button onclick="resetAll()" class="text-xs text-red-400 hover:text-red-600 transition underline opacity-60">
-                    ↻ ลบข้อมูลทั้งหมด และเริ่มบิลใหม่
+                    ↻ ลบข้อมูล และเริ่มบิลใหม่
                 </button>
             </div>
 
@@ -236,15 +236,15 @@
 
         // ฟังก์ชันสำหรับใส่ลูกน้ำ (Comma) อัตโนมัติขณะพิมพ์
         function formatCurrencyInput(input) {
-            // 1. ลบตัวอักษรที่ไม่ใช่ตัวเลขและจุดทศนิยมออกให้หมด
+            // ลบตัวอักษรที่ไม่ใช่ตัวเลขและจุดทศนิยมออกให้หมด
             let value = input.value.replace(/[^\d.]/g, '');
-            // 2. ป้องกันการพิมพ์จุดทศนิยมเกิน 1 ตัว
+            // ป้องกันการพิมพ์จุดทศนิยมเกิน 1 ตัว
             let parts = value.split('.');
             if (parts.length > 2) {
                 value = parts[0] + '.' + parts.slice(1).join('');
                 parts = value.split('.');
             }
-            // 3. ใส่คอมม่าในหลักพัน หมื่น แสน
+            // ใส่คอมม่าในหลักพัน หมื่น แสน
             if (value) {
                 parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
                 input.value = parts.join('.');
@@ -259,12 +259,15 @@
             const isInclusive = document.getElementById('vatInclusiveToggle').checked;
             const label = document.getElementById('vatTypeLabel');
             const container = document.getElementById('vatToggleContainer');
+            // เช็คว่าถ้าเลือกแบบ Vat ใน (ราคารวม VAT แล้ว ไม่บวกเพิ่ม) ให้ปรับข้อความและสีสันให้ดูแตกต่างจากแบบ Vat นอก (บวกเพิ่มจากราคาอาหาร)
             if (isInclusive) {
                 label.innerText = 'Vat ใน (ราคารวม VAT แล้ว ไม่บวกเพิ่ม)';
                 label.classList.replace('text-gray-500', 'text-green-600');
                 container.classList.replace('bg-gray-50', 'bg-green-50');
                 container.classList.replace('border-gray-200', 'border-green-200');
-            } else {
+            } 
+            // ถ้าเลือกแบบ Vat นอก (บวกเพิ่มจากราคาอาหาร) ให้ปรับข้อความและสีสันให้ดูแตกต่างจากแบบ Vat ใน (ราคารวม VAT แล้ว ไม่บวกเพิ่ม)
+            else {
                 label.innerText = 'Vat นอก (บวกเพิ่มจากราคาอาหาร)';
                 label.classList.replace('text-green-600', 'text-gray-500');
                 container.classList.replace('bg-green-50', 'bg-gray-50');
@@ -283,12 +286,15 @@
             const isBeforeDiscount = document.getElementById('scBeforeDiscountToggle').checked;
             const label = document.getElementById('scTypeLabel');
             const container = document.getElementById('scToggleContainer');
+            // เช็คว่าถ้าเลือกแบบคิดจากยอดเต็มก่อนหักส่วนลด (แบบโรงแรม) ให้ปรับข้อความและสีสันให้ดูแตกต่างจากแบบคิดจากยอดหลังหักส่วนลด (ร้านทั่วไป)
             if (isBeforeDiscount) {
                 label.innerText = 'คิดจากยอดเต็มก่อนหักส่วนลด (แบบโรงแรม)';
                 label.classList.replace('text-gray-500', 'text-orange-600');
                 container.classList.replace('bg-gray-50', 'bg-orange-50');
                 container.classList.replace('border-gray-200', 'border-orange-200');
-            } else {
+            } 
+            // ถ้าเลือกแบบคิดจากยอดหลังหักส่วนลด (แบบร้านทั่วไป) ให้ปรับข้อความและสีสันให้ดูแตกต่างจากแบบคิดจากยอดเต็มก่อนหักส่วนลด (แบบโรงแรม)
+            else {
                 label.innerText = 'คิดจากยอดหลังหักส่วนลด (ร้านทั่วไป)';
                 label.classList.replace('text-orange-600', 'text-gray-500');
                 container.classList.replace('bg-orange-50', 'bg-gray-50');
@@ -389,9 +395,11 @@
 
         // ฟังก์ชันเลือกคนกินทั้งหมดในรายการอาหาร
         function selectAllEaters() {
+            // ถ้าไม่มีคนในรายชื่อเลย ให้ไม่ต้องทำอะไร
             if (people.length === 0) return;
             const chips = document.querySelectorAll('.eater-chip');
             chips.forEach(chip => {
+                // ถ้ายังไม่ถูกเลือกอยู่ ให้เลือกไว้ก่อน
                 if (!chip.classList.contains('selected')) {
                     toggleEater(chip);
                 }
@@ -424,8 +432,9 @@
             const name = nameInput.value.trim() || 'รายการอาหาร';
             const price = parseFloat(priceInput.value);
             const eaters = Array.from(selectedChips).map(c => c.getAttribute('data-name'));
-
+            // เช็คว่าราคาต้องเป็นตัวเลขและมากกว่า 0
             if (isNaN(price) || price <= 0) return showToast('⚠️ กรุณาระบุราคาให้ถูกต้อง');
+            // เช็คว่าต้องเลือกคนกินอย่างน้อย 1 คน
             if (eaters.length === 0) return showToast('⚠️ กรุณาเลือกคนกินอย่างน้อย 1 คน');
             items.push({
                 name,
@@ -486,6 +495,7 @@
         // ฟังก์ชันสลับสถานะการเลือกคนกินในแต่ละรายการ
         function toggleItemEater(itemIdx, pName) {
             const idx = items[itemIdx].eaters.indexOf(pName);
+            // เช็คว่าถ้ามีอยู่แล้วให้ลบ ถ้าไม่มีให้เพิ่ม
             if (idx > -1) items[itemIdx].eaters.splice(idx, 1);
             else items[itemIdx].eaters.push(pName);
             renderItems();
@@ -499,9 +509,12 @@
             // เช็คว่ามีรายการอาหาร และทุกรายการต้องมีคนหารอย่างน้อย 1 คน
             const isValid = items.length > 0 && items.every(it => it.eaters.length > 0);
             btn.disabled = !isValid;
+            // เช็คว่าถ้าเงื่อนไขถูกต้อง ให้เปิดใช้งานปุ่มและปรับสไตล์
             if (isValid) {
                 btn.classList.remove('opacity-50', 'cursor-not-allowed');
-            } else {
+            } 
+            // ถ้าไม่ถูกต้อง ให้ปิดใช้งานปุ่มและปรับสไตล์ให้ดูไม่สามารถคลิกได้
+            else {
                 btn.classList.add('opacity-50', 'cursor-not-allowed');
             }
         }
@@ -517,6 +530,7 @@
 
         // ฟังก์ชันคำนวณยอดที่แต่ละคนต้องจ่าย
         function calculate() {
+            // เช็คความถูกต้องอีกครั้งก่อนคำนวณ
             if (items.length === 0) return showToast('⚠️ กรุณาเพิ่มรายการอาหารอย่างน้อย 1 อย่าง');
 
             const discountInput = parseFloat(document.getElementById('discount').value.replace(/,/g, '')) || 0;
@@ -538,8 +552,8 @@
                 rawGrandTotal += item.price;
             });
 
-            // สัดส่วนส่วนลด
             let discountRatio = 0;
+            // คำนวณสัดส่วนส่วนลดจากยอดรวมทั้งหมด
             if (rawGrandTotal > 0 && discountInput > 0) {
                 discountRatio = discountInput / rawGrandTotal;
             }
@@ -560,7 +574,7 @@
                 let vatAmount = isVatInclusive ? 0 : ((afterDiscount + scAmount) * (vatInput / 100));
 
                 const final = afterDiscount + scAmount + vatAmount;
-
+                // ถ้ามียอดที่ต้องจ่ายมากกว่า 0 บาท ถึงจะเพิ่มลงในตารางสรุป
                 if (final > 0) {
                     finalGrandTotal += final;
                     body.innerHTML += `
@@ -614,6 +628,7 @@
             });
 
             let discountRatio = 0;
+            // คำนวณสัดส่วนส่วนลดจากยอดรวมทั้งหมด
             if (rawGrandTotal > 0 && discountInput > 0) {
                 discountRatio = discountInput / rawGrandTotal;
             }
@@ -625,9 +640,9 @@
                 
                 let scAmount = isScBeforeDiscount ? (rawHead * (scInput / 100)) : (afterDiscount * (scInput / 100));
                 let vatAmount = isVatInclusive ? 0 : ((afterDiscount + scAmount) * (vatInput / 100));
-                
-                const final = afterDiscount + scAmount + vatAmount;
 
+                const final = afterDiscount + scAmount + vatAmount;
+                // ถ้ามียอดที่ต้องจ่ายมากกว่า 0 บาท ถึงจะเพิ่มลงในข้อความที่คัดลอก
                 if (final > 0) {
                     textToCopy += `${p}: ${final.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท\n`;
                 }
@@ -636,10 +651,10 @@
             const grandTotalText = document.getElementById('grandTotal').innerText;
             textToCopy += `\n💰 ยอดรวมทั้งหมด: ${grandTotalText} บาท`;
 
-            // เช็คว่ามีส่วนลด/SC/VAT หรือไม่ ถ้ามีให้เพิ่มรายละเอียดลงไปในข้อความที่คัดลอกด้วย
+            // เช็คว่ามี discount/SC/VAT หรือไม่ ถ้ามีให้เพิ่มรายละเอียดลงไปในข้อความที่คัดลอกด้วย
             if (discountInput > 0 || scInput > 0 || vatInput > 0) {
                 let details = [];
-                // เพิ่มข้อความแสดงรายละเอียดส่วนลด/SC/VAT
+                // เพิ่มข้อความแสดงรายละเอียด discount/SC/VAT
                 if (discountInput > 0) details.push(`ส่วนลด ${discountInput}บ.`);
                 if (scInput > 0) details.push(`SC ${scInput}% ${isScBeforeDiscount ? '(จากยอดเต็ม)' : ''}`);
                 if (vatInput > 0) details.push(`VAT ${vatInput}% ${isVatInclusive ? '(รวมในราคาแล้ว)' : ''}`);
@@ -707,9 +722,7 @@
         async function processReceipt(event) {
             const file = event.target.files[0];
             if (!file) return;
-
-            // เปลี่ยนจาก Toast เป็นเรียก Loading Overlay ขึ้นมาบังจอ
-            showLoading();
+            showLoading(); // เรียก Loading Overlay ขึ้นมาบังจอ
 
             const reader = new FileReader();
             reader.readAsDataURL(file);
@@ -728,7 +741,8 @@
                             height *= MAX_WIDTH / width;
                             width = MAX_WIDTH;
                         }
-                    } else {
+                    } 
+                    else {
                         if (height > MAX_HEIGHT) {
                             width *= MAX_HEIGHT / height;
                             height = MAX_HEIGHT;
@@ -780,25 +794,28 @@
                                 } 
                                 catch (e) {
                                     console.error("JSON Parse Error:", aiText);
+                                    // ถ้าแปลง JSON ไม่ได้ แสดงว่า AI ส่งข้อมูลกลับมาไม่ถูกต้อง อาจจะเป็นข้อความ Error หรือข้อความที่ไม่ใช่ JSON ให้แจ้งเตือนผู้ใช้
                                     if (attempt === maxRetries) showToast('❌ ข้อมูลที่ AI ส่งกลับมาผิดพลาด ลองใหม่อีกครั้ง');
                                 }
                             } 
                             // ถ้า AI แจ้ง Error ตรงๆ (เช่น Limit เต็ม)
                             else if (data.error) {
                                 console.error("Gemini Error:", data.error);
+                                // ถ้า AI แจ้งว่าเซิร์ฟเวอร์ทำงานหนักเกินไป ให้แจ้งเตือนผู้ใช้และไม่ต้องยิงซ้ำแล้ว เพราะไม่มีประโยชน์ที่จะยิงซ้ำในกรณีนี้
                                 if (attempt === maxRetries) showToast('❌ AI เซิร์ฟเวอร์ทำงานหนักเกินไป ลองอีกครั้งใน 1 นาที');
                             }
                             // กรณีไม่มี candidates กลับมา
                             else {
+                                // ถ้าไม่มีข้อมูลที่ต้องการกลับมาเลย ให้แจ้งเตือนผู้ใช้ว่าไม่สามารถอ่านข้อมูลจากรูปนี้ได้
                                 if (attempt === maxRetries) showToast('❌ ไม่สามารถอ่านข้อมูลจากรูปนี้ได้');
                             }
                         } 
                         // กรณีเน็ตหลุด หรือ Vercel ค้าง
                         catch (error) {
                             console.error(error);
+                            // ถ้าเกิดข้อผิดพลาดในการเชื่อมต่อหรือประมวลผล ให้แจ้งเตือนผู้ใช้ และลองยิงซ้ำได้ (ถ้ายังไม่ถึงจำนวนครั้งสูงสุด)
                             if (attempt === maxRetries) showToast('❌ เกิดข้อผิดพลาดในการเชื่อมต่อ API');
                         }
-                        
                         attempt++;
                     } // จบ while loop
 
@@ -806,7 +823,6 @@
                     hideLoading();
                     event.target.value = ''; 
                 };
-                
                 // ดัก Error กรณีโหลดภาพเข้า Memory ไม่สำเร็จ
                 img.onerror = function() {
                     hideLoading();
